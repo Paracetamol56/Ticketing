@@ -81,7 +81,7 @@ pub async fn send_ticket(
     body = body.replace("{{name}}", &ticket.name)
         .replace("{{email}}", &ticket.email)
         .replace("{{number}}", &ticket.number.to_string())
-        .replace("{{link}}", format!("http://localhost:5173/?ticket={}", ticket.id.unwrap().to_hex()).as_str());
+        .replace("{{link}}", format!("https://ticket.matheo-galuba.com/?ticket={}", ticket.id.unwrap().to_hex()).as_str());
     send_email(
         secret_store,
         &User { name: ticket.name.clone(), email: ticket.email.clone() },

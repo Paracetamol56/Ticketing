@@ -1,7 +1,7 @@
 import type TicketModel from '../models/ticket';
 import axios from 'axios';
 
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL: string = process.env.API_URL;
 
 async function checkStatus(): Promise<boolean> {
   try {
