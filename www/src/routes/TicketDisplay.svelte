@@ -49,7 +49,7 @@
       Name
     </p>
     <p class="text-sm truncate">
-      Todo <!-- {ticket.name} -->
+      {ticket.name}
     </p>
   </div>
   <div class="flex justify-between items-start">

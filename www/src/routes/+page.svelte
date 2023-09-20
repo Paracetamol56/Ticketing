@@ -42,8 +42,8 @@
 			getTicket(ticketId).then((ticket) => {
 				if (ticket) {
 					currentTicket = ticket;
-		      console.log(ticket);
-		      console.log(ticket.id);
+					console.log(ticket);
+					console.log(ticket.id);
 				} else {
 					addToast({
 						data: {
@@ -138,7 +138,7 @@
 		</p>
 	</div>
 
-  <hr class="my-3 h-[1px] max-w-xs border-none bg-neutral-400 mx-auto">
+	<hr class="my-3 h-[1px] max-w-xs border-none bg-neutral-400 mx-auto" />
 
 	<div class="flex items-center justify-center gap-1 text-white">
 		<p>

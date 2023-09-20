@@ -77,7 +77,7 @@ pub async fn post_ticket(
         }
     }
 
-    let ticket = Ticket::new(
+    let mut ticket = Ticket::new(
         ticket_number,
         name.to_owned(),
         body.email.clone(),
@@ -89,6 +89,8 @@ pub async fn post_ticket(
         eprintln!("{:?}", e);
         return Err(StatusCode::INTERNAL_SERVER_ERROR);
     }
+    // Add the id to the ticket
+    ticket.id = Some(insert_result.unwrap().inserted_id.as_object_id().unwrap().clone());
 
     // Send the email
     let recipient: sendgrid::User = sendgrid::User {
@@ -96,7 +98,7 @@ pub async fn post_ticket(
         email: body.email,
     };
 
-    let sending = sendgrid::send_ticket(&app_state.secret_store, &recipient).await;
+    let sending = sendgrid::send_ticket(&app_state.secret_store, &ticket).await;
 
     match sending {
         Ok(_) => {
@@ -106,8 +108,8 @@ pub async fn post_ticket(
                     "recipient": &recipient,
                 },
                 "ticket": {
-                    "id": insert_result.unwrap().inserted_id.as_object_id().unwrap().to_hex(),
-                    "number": ticket_number,
+                    "id": ticket.id.unwrap().to_hex(),
+                    "number": &ticket.number,
                     "name": &ticket.name,
                     "email": &ticket.email,
                     "message": &ticket.message,

@@ -16,7 +16,7 @@ async function checkStatus(): Promise<boolean> {
 async function getTicket(id: string): Promise<TicketModel|null> {
   try {
     const response = await axios.get(`${API_URL}/ticket/${id}`);
-    return response.data.ticket as TicketModel;
+    return response.data as TicketModel;
   } catch (error) {
     console.error(error);
     return null;

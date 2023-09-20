@@ -2,6 +2,8 @@ use reqwest::{header, Client, StatusCode};
 use serde::Serialize;
 use serde_json::json;
 
+use crate::ticket::Ticket;
+
 #[derive(Debug, Serialize)]
 pub struct User {
     pub name: String,
@@ -34,7 +36,7 @@ async fn send_email(
         },
         "content": [
             {
-                "type": "text/plain",
+                "type": "text/html",
                 "value": body
             }
         ]
@@ -73,13 +75,18 @@ async fn send_email(
 
 pub async fn send_ticket(
     secret_store: &shuttle_secrets::SecretStore,
-    recipient: &User,
+    ticket: &Ticket,
 ) -> Result<(), reqwest::Error> {
+    let mut body: String = include_str!("../mail_template.html").to_owned();
+    body = body.replace("{{name}}", &ticket.name)
+        .replace("{{email}}", &ticket.email)
+        .replace("{{number}}", &ticket.number.to_string())
+        .replace("{{link}}", format!("http://localhost:5173/?ticket={}", ticket.id.unwrap().to_hex()).as_str());
     send_email(
         secret_store,
-        recipient,
+        &User { name: ticket.name.clone(), email: ticket.email.clone() },
         "Your ticket has been issued",
-        "Thank you for using our service. Your ticket has been issued.",
+        body.as_ref(),
     )
     .await
 }
