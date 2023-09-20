@@ -1,0 +1,74 @@
+import type { Config } from 'tailwindcss';
+import plugin from 'tailwindcss/plugin';
+import typography from '@tailwindcss/typography';
+
+export default {
+  content: ['./src/**/*.{html,js,svelte,ts}'],
+
+  theme: {
+    container: {
+      center: true,
+      padding: '2rem',
+      screens: {
+        '2xl': '1440px',
+      },
+    },
+    extend: {
+      fontFamily: {
+        sans: [
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'Roboto',
+          'Oxygen',
+          'Ubuntu',
+          'Cantarell',
+          'Fira Sans',
+          'Droid Sans',
+          'Helvetica Neue',
+          'Arial',
+          'sans-serif',
+          'Apple Color Emoji',
+          'Segoe UI Emoji',
+          'Segoe UI Symbol',
+        ],
+        mono: [
+          'ui-monospace',
+          'SFMono-Regular',
+          'SF Mono',
+          'Menlo',
+          'Consolas',
+          'Liberation Mono',
+          'monospace',
+        ],
+      },
+      typography: (theme) => ({
+        DEFAULT: {
+          css: {
+            code: {
+              position: 'relative',
+              borderRadius: theme('borderRadius.md'),
+            },
+          },
+        },
+      }),
+    },
+  },
+
+  plugins: [
+    typography,
+    plugin(function ({ addVariant, matchUtilities, theme }) {
+      addVariant('hocus', ['&:hover', '&:focus']);
+      // Square utility
+      matchUtilities(
+        {
+          square: (value) => ({
+            width: value,
+            height: value,
+          }),
+        },
+        { values: theme('spacing') }
+      );
+    }),
+  ],
+} satisfies Config;
