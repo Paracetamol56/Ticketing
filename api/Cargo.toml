@@ -13,9 +13,11 @@ shuttle-axum = "0.26.0"
 mongodb = "2.6.0"
 shuttle-shared-db = { version = "0.26.0", features = ["mongodb"] }
 shuttle-secrets = "0.26.0"
-tower-http = { version = "0.4.4", features = ["cors"] }
+tower = "0.4.13"
+tower-http = { version = "0.4.4", features = ["cors", "timeout"] }
 chrono = "0.4.31"
 tokio = "1.28.2"
+futures = "0.3.28"
 regex = "1.9.4"
 serde_json = "1.0.105"
 serde = { version = "1.0.188", features = ["derive"] }

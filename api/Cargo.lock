@@ -590,6 +590,7 @@ checksum = "23342abe12aba583913b2e62f22225ff9c950774065e4bfb61a19cd9770fec40"
 dependencies = [
  "futures-channel",
  "futures-core",
+ "futures-executor",
  "futures-io",
  "futures-sink",
  "futures-task",
@@ -2454,6 +2455,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "chrono",
+ "futures",
  "mongodb",
  "regex",
  "reqwest",
@@ -2464,6 +2466,7 @@ dependencies = [
  "shuttle-secrets",
  "shuttle-shared-db",
  "tokio",
+ "tower",
  "tower-http",
 ]
 
@@ -2673,6 +2676,7 @@ dependencies = [
  "http-body",
  "http-range-header",
  "pin-project-lite",
+ "tokio",
  "tower-layer",
  "tower-service",
  "tracing",

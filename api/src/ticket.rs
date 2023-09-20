@@ -1,9 +1,12 @@
-use serde::{Serialize, Deserialize};
-use mongodb::bson::doc;
 use chrono::{DateTime, Utc};
+use mongodb::bson::{doc, oid::ObjectId};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Ticket {
+    #[serde(rename = "_id")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<ObjectId>,
     pub number: u32,
     pub name: String,
     pub email: String,
@@ -18,6 +21,7 @@ pub struct Ticket {
 impl Ticket {
     pub fn new(number: u32, name: String, email: String, message: String) -> Ticket {
         Ticket {
+            id: None,
             number: number,
             name: name,
             email,
@@ -28,12 +32,5 @@ impl Ticket {
             updated_at: None,
             closed_at: None,
         }
-    }
-}
-
-impl std::fmt::Display for Ticket {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Ticket: \n\tnumber: {},\n\temail: {},\n\tmessage: {},\n\tstatus: {},\n\tcreated_at: {},\n\tupdated_at: {},\n\tclosed_at: {}\n",
-        self.number, self.email, self.message, self.status, self.created_at, self.updated_at.unwrap_or_default(), self.closed_at.unwrap_or_default())
     }
 }

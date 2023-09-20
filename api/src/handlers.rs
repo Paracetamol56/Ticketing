@@ -1,14 +1,13 @@
 use axum::{extract, response};
 use chrono::Utc;
+use futures::stream::StreamExt;
 use mongodb::bson::{doc, oid::ObjectId};
 use regex::Regex;
 use reqwest::StatusCode;
 use serde::Deserialize;
 use serde_json::{json, Value};
 
-use crate::{ticket::Ticket, AppState, sendgrid};
-
-
+use crate::{sendgrid, ticket::Ticket, AppState};
 
 pub async fn home() -> &'static str {
     "Welcome to the ticketing system API made by Mathéo GALUBA with Rust, Axum, MongoDB, and Shuttle!"
@@ -34,7 +33,7 @@ pub struct PostTicketBody {
 // Route POST `/ticket` taking a json body and returning a json body
 pub async fn post_ticket(
     extract::State(app_state): extract::State<AppState>,
-    extract::Json(body): extract::Json<PostTicketBody>
+    extract::Json(body): extract::Json<PostTicketBody>,
 ) -> Result<response::Json<Value>, StatusCode> {
     // body.name must be at least 3 characters long and 100 characters at most
     let name = body.name.trim();
@@ -51,22 +50,26 @@ pub async fn post_ticket(
     if message.len() < 10 && message.len() > 1000 {
         return Err(StatusCode::BAD_REQUEST);
     }
-    
+
     // Create the ticket in the database
     let collection = app_state.database.collection::<Ticket>("tickets");
 
     // Fetch the ticket with the highest number
-    let max_number_ticket = collection.find_one(
-        doc! {},
-        mongodb::options::FindOneOptions::builder().sort(doc! { "number": -1 }).build()
-    ).await;
+    let max_number_ticket = collection
+        .find_one(
+            doc! {},
+            mongodb::options::FindOneOptions::builder()
+                .sort(doc! { "number": -1 })
+                .build(),
+        )
+        .await;
     let mut ticket_number: u32 = 1;
     match max_number_ticket {
         Ok(ticket) => {
             if let Some(t) = ticket {
                 ticket_number = t.number + 1;
             }
-        },
+        }
         Err(e) => {
             eprintln!("Unable to fetch ticket");
             eprintln!("{:?}", e);
@@ -74,20 +77,25 @@ pub async fn post_ticket(
         }
     }
 
-    let ticket = Ticket::new(ticket_number, name.to_owned(), body.email.clone(), message.to_owned());
+    let ticket = Ticket::new(
+        ticket_number,
+        name.to_owned(),
+        body.email.clone(),
+        message.to_owned(),
+    );
     let insert_result = collection.insert_one(&ticket, None).await;
     if let Err(e) = insert_result {
         eprintln!("Unable to insert ticket");
         eprintln!("{:?}", e);
         return Err(StatusCode::INTERNAL_SERVER_ERROR);
     }
-    
+
     // Send the email
     let recipient: sendgrid::User = sendgrid::User {
         name: name.to_owned(),
         email: body.email,
     };
-    
+
     let sending = sendgrid::send_ticket(&app_state.secret_store, &recipient).await;
 
     match sending {
@@ -108,7 +116,7 @@ pub async fn post_ticket(
                 }
             });
             Ok(response::Json(response))
-        },
+        }
         Err(e) => {
             eprintln!("Unable to send email");
             eprintln!("{:?}", e);
@@ -116,7 +124,6 @@ pub async fn post_ticket(
         }
     }
 }
-
 
 // Route GET `/ticket/:id` returning a json body
 pub async fn get_ticket(
@@ -131,16 +138,15 @@ pub async fn get_ticket(
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let ticket = collection.find_one(
-        doc! { "_id": object_id.unwrap() },
-        None
-    ).await;
+    let ticket = collection
+        .find_one(doc! { "_id": object_id.unwrap() }, None)
+        .await;
 
     match ticket {
         Ok(ticket) => {
             if let Some(t) = ticket {
                 let response = json!({
-                    "id": id,
+                    "id": t.id.unwrap().to_hex(),
                     "number": t.number,
                     "name": t.name,
                     "email": t.email,
@@ -154,9 +160,89 @@ pub async fn get_ticket(
             } else {
                 Err(StatusCode::NOT_FOUND)
             }
-        },
+        }
         Err(e) => {
             eprintln!("Unable to fetch ticket");
+            eprintln!("{:?}", e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GetTicketPageQuery {
+    page: u32,
+    limit: u32,
+    status: Option<String>,
+}
+
+// Route GET `/tickets` returning a json body
+pub async fn get_ticket_page(
+    extract::State(app_state): extract::State<AppState>,
+    extract::Query(query): extract::Query<GetTicketPageQuery>,
+) -> Result<response::Json<Value>, StatusCode> {
+    // query.page must be at least 1
+    if query.page < 1 {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    // query.limit must be at least 1 and at most 100
+    if query.limit < 1 && query.limit > 100 {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    // query.status must be either "open", "pending", or "closed"
+    let status_pattern = Regex::new(r"^(open|pending|closed)$").unwrap();
+    if let Some(status) = &query.status {
+        if !status_pattern.is_match(&status) {
+            return Err(StatusCode::BAD_REQUEST);
+        }
+    }
+
+    let collection = app_state.database.collection::<Ticket>("tickets");
+
+    let mut filter = doc! {};
+    if let Some(status) = &query.status {
+        filter = doc! { "status": status };
+    }
+
+    let cursor = collection
+        .find(
+            filter,
+            mongodb::options::FindOptions::builder()
+                .sort(doc! { "number": -1 })
+                .skip(Some(((query.page - 1) * query.limit) as u64))
+                .limit(Some(query.limit as i64))
+                .build(),
+        )
+        .await;
+
+    match cursor {
+        Ok(mut cursor) => {
+            let mut tickets_vec: Vec<Value> = Vec::new();
+            while let Some(ticket) = cursor.next().await {
+                if let Ok(t) = ticket {
+                    tickets_vec.push(json!({
+                        "id": t.id.unwrap().to_hex(),
+                        "number": t.number,
+                        "name": t.name,
+                        "email": t.email,
+                        "message": t.message,
+                        "status": t.status,
+                        "created_at": t.created_at,
+                        "updated_at": t.updated_at,
+                        "closed_at": t.closed_at,
+                    }));
+                }
+            }
+            let response = json!({
+                "tickets": tickets_vec,
+                "page": query.page,
+                "limit": query.limit,
+                "status": query.status,
+            });
+            Ok(response::Json(response))
+        }
+        Err(e) => {
+            eprintln!("Unable to fetch tickets");
             eprintln!("{:?}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
@@ -209,10 +295,9 @@ pub async fn put_ticket(
     ).await;
     match update_result {
         Ok(_) => {
-            let ticket = collection.find_one(
-                doc! { "_id": object_id.unwrap() },
-                None
-            ).await;
+            let ticket = collection
+                .find_one(doc! { "_id": object_id.unwrap() }, None)
+                .await;
             match ticket {
                 Ok(Some(t)) => {
                     let response = json!({
@@ -228,13 +313,13 @@ pub async fn put_ticket(
                         "closed_at": t.closed_at,
                     });
                     Ok(response::Json(response))
-                },
+                }
                 _ => {
                     eprintln!("Unable to fetch ticket");
                     return Err(StatusCode::INTERNAL_SERVER_ERROR);
                 }
             }
-        },
+        }
         Err(e) => {
             eprintln!("Unable to update ticket");
             eprintln!("{:?}", e);
