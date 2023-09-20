@@ -3,8 +3,8 @@
 	import { AtSign, MessageSquare, User } from 'lucide-svelte';
 	import Tooltip from './Tooltip.svelte';
 	import { issueTicket } from '../services/api';
-	import Ticket from './Ticket.svelte';
 	import { goto } from '$app/navigation';
+	import { addToast } from './+layout.svelte';
 
 	const {
 		elements: { root }
@@ -20,10 +20,22 @@
 		event.preventDefault();
 		issueTicket(name, email, message).then((ticket) => {
 			if (!ticket) {
-				// Toast: An error occured, please try again later
+				addToast({
+					data: {
+						title: 'Internal Error',
+						description: 'An error occured while creating your ticket, please try again later',
+						color: 'bg-red-500'
+					}
+				});
 				return;
 			}
-			// Toast: Ticket successfully issued, an email has been sent to you
+			addToast({
+				data: {
+					title: 'Success',
+					description: 'Your ticket has been successfully created, check your mailbox !',
+					color: 'bg-green-500'
+				}
+			});
 			const id = ticket.id;
 			goto(`/?ticket=${id}`);
 		});

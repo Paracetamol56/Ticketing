@@ -4,7 +4,6 @@ import axios from 'axios';
 const API_URL: string = "https://ticketing.shuttleapp.rs";
 
 async function checkStatus(): Promise<boolean> {
-  console.log("API_URL", API_URL);
   try {
     const response = await axios.get(`${API_URL}/status`);
     return response.data.status === 'ok';

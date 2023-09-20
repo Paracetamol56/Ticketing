@@ -14,7 +14,7 @@
 </script>
 
 <div
-	class="z-10 mx-4 w-[18rem] max-w-full rounded-xl bg-white shadow-lg sm:w-[25rem]"
+	class="z-10 w-[300px] max-w-full rounded-xl bg-white shadow-lg sm:w-[25rem]"
 	{...$root}
 >
 	{#each items as { id, title, description }, i}

@@ -1,17 +1,8 @@
-<script lang="ts" context="module">
-	export type ToastData = {
-		title: string;
-		description: string;
-		color: string;
-	};
-</script>
-
 <script lang="ts">
 	import { Heart } from 'lucide-svelte';
-	import Toast from './Toast.svelte';
+	import Toast from '../components/Toast.svelte';
 	import Ticket from './Ticket.svelte';
 	import Accordion from './Accordion.svelte';
-	import '../app.css';
 	import { checkStatus, getTicket } from '../services/api';
 	import { onMount } from 'svelte';
 	import { createToaster } from '@melt-ui/svelte';
@@ -19,22 +10,12 @@
 	import TicketForm from './TicketForm.svelte';
 	import type TicketModel from '../models/ticket';
 	import TicketDisplay from './TicketDisplay.svelte';
+	import { addToast } from './+layout.svelte';
 
 	let currentTicket: TicketModel;
 
 	// On mount, check the api status
 	onMount(async () => {
-		checkStatus().then((status) => {
-			if (!status) {
-				addToast({
-					data: {
-						title: 'Error',
-						description: 'The API is not available, please try again later',
-						color: 'bg-red-500'
-					}
-				});
-			}
-		});
 		// If a query param 'ticket' is provided, load the ticket
 		const params = new URLSearchParams(window.location.search);
 		const ticketId = params.get('ticket');
@@ -56,31 +37,12 @@
 			});
 		}
 	});
-
-	const {
-		elements,
-		helpers: { addToast },
-		states: { toasts },
-		actions: { portal }
-	} = createToaster<ToastData>();
 </script>
-
-<!-- Toast list -->
-<div
-	class="fixed right-0 top-0 z-50 m-4 flex flex-col items-end gap-2 md:bottom-0 md:top-auto"
-	use:portal
->
-	{#each $toasts as toast (toast.id)}
-		<div animate:flip={{ duration: 500 }}>
-			<Toast {elements} {toast} />
-		</div>
-	{/each}
-</div>
 
 <header class="py-16">
 	<div class="container">
 		<div class="flex flex-col justify-center text-white">
-			<h1 class="my-4 text-6xl font-bold text-center">Welcome to my ticketing app</h1>
+			<h1 class="my-4 text-5xl md:text-6xl font-bold text-center">Welcome to my ticketing app</h1>
 			<div class="mx-auto">
 				<p class="my-4 text-lg text-center">
 					My favorite things in life don't cost any money.<br />It's really clear that the most
@@ -94,7 +56,7 @@
 
 <main class="py-20 w-full h-full">
 	<div class="container">
-		<div class="flex justify-center items-center">
+		<div class="flex justify-center flex-col md:flex-row items-center gap-10">
 			<Ticket>
 				{#if currentTicket}
 					<TicketDisplay ticket={currentTicket} />
@@ -126,40 +88,6 @@
 		</div>
 	</div>
 </main>
-
-<footer class="w-full py-2">
-	<div class="flex items-center justify-center gap-1 text-white">
-		<p>App made with</p>
-		<Heart class="text-orange-500" size="16" />
-		<p>
-			by <a class="underline text-orange-100" href="https://matheo-galuba.com/" target="_blank"
-				>Matheo Galuba</a
-			>
-		</p>
-	</div>
-
-	<hr class="my-3 h-[1px] max-w-xs border-none bg-neutral-400 mx-auto" />
-
-	<div class="flex items-center justify-center gap-1 text-white">
-		<p>
-			Powered by <a class="underline text-orange-100" href="https://www.rust-lang.org">Rust</a>,
-			<a class="underline text-orange-100" href="https://www.shuttle.rs">Shuttle.rs</a>,
-			<a class="underline text-orange-100" href="https://www.svelte.dev">Svelte</a>
-			and <a class="underline text-orange-100" href="https://www.tailwindcss.com">TailwindCSS</a>
-		</p>
-	</div>
-	<div class="flex items-center justify-center gap-1 text-white">
-		<p>
-			Icons by <a class="underline text-orange-100" href="https://lucide.dev">Lucide</a>
-		</p>
-	</div>
-	<div class="flex items-center justify-center gap-1 text-white">
-		<p>
-			Hosted on <a class="underline text-orange-100" href="https://www.netlify.com">Netlify</a> and
-			<a class="underline text-orange-100" href="https://www.shuttle.rs">Shuttle.rs</a>
-		</p>
-	</div>
-</footer>
 
 <style lang="postcss">
 	main {

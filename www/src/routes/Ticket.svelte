@@ -2,7 +2,7 @@
 <script lang="ts">
 </script>
 
-<div class="mx-4 ticket">
+<div class="ticket">
   <div class="ticket_content">
     <slot />
   </div>
