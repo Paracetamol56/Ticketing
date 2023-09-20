@@ -1,8 +1,10 @@
 .DS_Store
 node_modules
 /build
+/.netlify
 /.svelte-kit
 /package
+.npmrc
 .env
 .env.*
 !.env.example
