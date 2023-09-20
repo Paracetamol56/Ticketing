@@ -11,22 +11,22 @@
 	} = createLabel();
 
 	let name = '';
-  let email = '';
-  let message = '';
+	let email = '';
+	let message = '';
 
-  // TODO: Reactive form validation
+	// TODO: Reactive form validation
 
 	function handleSubmit(event: Event) {
 		event.preventDefault();
 		issueTicket(name, email, message).then((ticket) => {
-      if (!ticket) {
-        // Toast: An error occured, please try again later
-        return;
-      }
-      // Toast: Ticket successfully issued, an email has been sent to you
-      const id = ticket.id;
-      goto(`/?ticket=${id}`);
-    });
+			if (!ticket) {
+				// Toast: An error occured, please try again later
+				return;
+			}
+			// Toast: Ticket successfully issued, an email has been sent to you
+			const id = ticket.id;
+			goto(`/?ticket=${id}`);
+		});
 	}
 </script>
 
@@ -43,7 +43,7 @@
 			<span class="ms-1">Name</span>
 		</label>
 		<input
-      bind:value={name}
+			bind:value={name}
 			class="h-10 flex-grow rounded-md border border-neutral-200 p-2 focus:ring-2 focus:ring-orange-500 focus:outline-none"
 			type="text"
 			id="name"
@@ -59,7 +59,7 @@
 			<span class="ms-1">Email</span>
 		</label>
 		<input
-      bind:value={email}
+			bind:value={email}
 			class="h-10 flex-grow rounded-md border border-neutral-200 p-2 focus:ring-2 focus:ring-orange-500 focus:outline-none"
 			type="email"
 			id="email"
@@ -78,17 +78,17 @@
 			</Tooltip>
 		</label>
 		<textarea
-      bind:value={message}
-      class="h-20 flex-grow rounded-md border resize-none border-neutral-200 p-2 focus:ring-2 focus:ring-orange-500 focus:outline-none"
-      id="message"
-      placeholder="I need help on a project I'm working on"
-    ></textarea>
-    <button
-      class="my-4 self-end rounded-md bg-orange-500 px-4 py-2 font-medium text-orange-100 hover:opacity-75 active:opacity-50"
-      type="submit"
-    >
-      <span>Submit</span>
-    </button>
+			bind:value={message}
+			class="h-20 flex-grow rounded-md border resize-none border-neutral-200 p-2 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+			id="message"
+			placeholder="I need help on a project I'm working on"
+		/>
+		<button
+			class="my-4 self-end rounded-md bg-orange-500 px-4 py-2 font-medium text-orange-100 hover:opacity-75 active:opacity-50"
+			type="submit"
+		>
+			<span>Submit</span>
+		</button>
 	</div>
 </form>
 

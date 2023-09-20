@@ -29,8 +29,8 @@
 				addToast({
 					data: {
 						title: 'Error',
-						description: 'The API is not available',
-						color: 'red-500'
+						description: 'The API is not available, please try again later',
+						color: 'bg-red-500'
 					}
 				});
 			}
@@ -49,7 +49,7 @@
 						data: {
 							title: 'Warning',
 							description: 'The ticket ID you provided is not valid',
-							color: 'orange-500'
+							color: 'bg-orange-500'
 						}
 					});
 				}
