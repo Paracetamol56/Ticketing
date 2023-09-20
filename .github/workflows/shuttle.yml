@@ -1,0 +1,23 @@
+name: Shuttle Deploy
+
+on:
+  push:
+    branches:
+      - "master"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: shuttle-hq/deploy-action@main
+        with:
+          deploy-key: ${{ secrets.SHUTTLE_DEPLOY_KEY }}
+          working-directory: "api"
+          name: "ticketing"
+          no-test: "true"
+          secrets: |
+            ADMIN_TOKEN = '${{ secrets.ADMIN_TOKEN }}'
+            SENDGRID_API_KEY = '${{ secrets.SENDGRID_API_KEY }}'
+            SENDER_NAME = '${{ secrets.SENDER_NAME }}'
+            SENDER_EMAIL = '${{ secrets.SENDER_EMAIL }}'
