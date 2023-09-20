@@ -1,12 +1,12 @@
 import type TicketModel from '../models/ticket';
 import axios from 'axios';
 
-const API_URL: string = process.env.API_URL;
+const API_URL: string = "https://ticketing.shuttleapp.rs";
 
 async function checkStatus(): Promise<boolean> {
-  console.log("API_URL", process.env.API_URL);
+  console.log("API_URL", API_URL);
   try {
-    const response = await axios.get(`${process.env.API_URL}/status`);
+    const response = await axios.get(`${API_URL}/status`);
     return response.data.status === 'ok';
   } catch (error) {
     console.error(error);
@@ -16,7 +16,7 @@ async function checkStatus(): Promise<boolean> {
 
 async function getTicket(id: string): Promise<TicketModel|null> {
   try {
-    const response = await axios.get(`${process.env.API_URL}/ticket/${id}`);
+    const response = await axios.get(`${API_URL}/ticket/${id}`);
     return response.data as TicketModel;
   } catch (error) {
     console.error(error);
@@ -35,7 +35,7 @@ interface TicketPage {
 
 async function getTicketPage(token: string, page: number): Promise<TicketPage|null> {
   try {
-    const response = await axios.get(`${process.env.API_URL}/ticket?page=${page}&limit=10`, {
+    const response = await axios.get(`${API_URL}/ticket?page=${page}&limit=10`, {
       headers: {
         'Authorization': token,
       }
@@ -49,7 +49,7 @@ async function getTicketPage(token: string, page: number): Promise<TicketPage|nu
 
 async function updateTicket(token: string, id: string, status: string, note: string|null): Promise<TicketModel|null> {
   try {
-    const response = await axios.patch(`${process.env.API_URL}/ticket/${id}`, {
+    const response = await axios.patch(`${API_URL}/ticket/${id}`, {
       status,
       note,
     }, {
@@ -70,7 +70,7 @@ async function issueTicket(
   message: string,
 ): Promise<TicketModel | null> {
   try {
-    const response = await axios.post(`${process.env.API_URL}/ticket`, {
+    const response = await axios.post(`${API_URL}/ticket`, {
       name,
       email,
       message,
