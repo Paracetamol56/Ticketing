@@ -206,14 +206,17 @@ pub async fn get_ticket_page(
 
     let cursor = collection
         .find(
-            filter,
+            filter.clone(),
             mongodb::options::FindOptions::builder()
+                // closed ones at the end and ascending numbers
                 .sort(doc! { "number": -1 })
                 .skip(Some(((query.page - 1) * query.limit) as u64))
                 .limit(Some(query.limit as i64))
                 .build(),
         )
         .await;
+
+    let total_tickets = collection.count_documents(filter.clone(), None).await.unwrap();
 
     match cursor {
         Ok(mut cursor) => {
@@ -227,6 +230,7 @@ pub async fn get_ticket_page(
                         "email": t.email,
                         "message": t.message,
                         "status": t.status,
+                        "note": t.note,
                         "created_at": t.created_at,
                         "updated_at": t.updated_at,
                         "closed_at": t.closed_at,
@@ -235,6 +239,8 @@ pub async fn get_ticket_page(
             }
             let response = json!({
                 "tickets": tickets_vec,
+                "count": total_tickets,
+                "max_page": (total_tickets as f64 / query.limit as f64).ceil() as u32,
                 "page": query.page,
                 "limit": query.limit,
                 "status": query.status,
@@ -300,8 +306,8 @@ pub async fn put_ticket(
                 .await;
             match ticket {
                 Ok(Some(t)) => {
-                    let response = json!({
-                        "id": id,
+                    Ok(response::Json(json!({
+                        "id": t.id.unwrap().to_hex(),
                         "number": t.number,
                         "name": t.name,
                         "email": t.email,
@@ -310,9 +316,8 @@ pub async fn put_ticket(
                         "note": t.note,
                         "created_at": t.created_at,
                         "updated_at": t.updated_at,
-                        "closed_at": t.closed_at,
-                    });
-                    Ok(response::Json(response))
+                        "closed_at": t.closed_at
+                    })))
                 }
                 _ => {
                     eprintln!("Unable to fetch ticket");

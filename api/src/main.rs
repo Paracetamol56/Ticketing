@@ -80,7 +80,7 @@ async fn axum(
         .route(
             "/ticket/:id",
             get(handlers::get_ticket)
-                .put(handlers::put_ticket.layer(admin_aut_middleware.clone()))
+                .patch(handlers::put_ticket.layer(admin_aut_middleware.clone()))
         )
         .layer(cors)
         .layer(TimeoutLayer::new(std::time::Duration::from_secs(30)))
