@@ -46,11 +46,12 @@ async function getTicketPage(token: string, page: number): Promise<TicketPage|nu
   }
 }
 
-async function updateTicket(token: string, id: string, status: string, note: string|null): Promise<TicketModel|null> {
+async function updateTicket(token: string, id: string, status: string, note: string|null, notify: boolean): Promise<TicketModel|null> {
   try {
     const response = await axios.patch(`${API_URL}/ticket/${id}`, {
       status,
       note,
+      notify,
     }, {
       headers: {
         'Authorization': token,

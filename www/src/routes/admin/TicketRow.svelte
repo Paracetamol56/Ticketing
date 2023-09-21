@@ -1,20 +1,20 @@
 <script lang="ts">
 	import type TicketModel from '../../models/ticket';
-	import { ArrowUpRight, CheckCircle2, CircleDot, CircleDotDashed } from 'lucide-svelte';
-	import { createSelect, melt, type CreateSelectProps } from '@melt-ui/svelte';
+	import { ArrowUpRight, CheckCircle2, Circle, CircleDot, CircleDotDashed } from 'lucide-svelte';
+	import { createSelect, melt, type CreateSelectProps, createDialog } from '@melt-ui/svelte';
 	import { Check, ChevronDown } from 'lucide-svelte';
 	import { updateTicket } from '../../services/api';
 	import { addToast } from '../+layout.svelte';
+	import Dialog from './Dialog.svelte';
 
 	export let ticket: TicketModel;
 
 	let new_note: string = ticket.note || '';
 	let new_status: string = ticket.status;
 
-	const handleSave = async () => {
-		console.log(new_note, new_status);
+	const handleSave = async (notify: boolean) => {
 		let token = window.sessionStorage.getItem('token');
-		let result: TicketModel | null = await updateTicket(token!, ticket.id, new_status, new_note);
+		let result: TicketModel | null = await updateTicket(token!, ticket.id, new_status, new_note, notify);
 		if (!result) {
 			addToast({
 				data: {
@@ -77,7 +77,7 @@
 		{:else if new_status === 'closed'}
 			<CheckCircle2 class="m-8 stroke-green-500" size="32" />
 		{:else}
-			<CircleDot class="m-8 stroke-gray-500" size="32" />
+			<Circle class="m-8 stroke-gray-500" size="32" />
 		{/if}
 		<p><strong>Number</strong></p>
 		<p class="text-6xl text-center">{ticket.number}</p>
@@ -110,7 +110,7 @@
 		<p><strong>Note:</strong></p>
 		<textarea
 			bind:value={new_note}
-			class="h-20 flex-grow rounded-md border resize-none border-neutral-200 p-2 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+			class="h-20 flex-grow rounded-md border resize-none border-neutral-200 shadow-lg p-2 focus:ring-2 focus:ring-orange-500 focus:outline-none"
 			id="message"
 			placeholder="Private note"
 		/>
@@ -118,7 +118,7 @@
 		<div>
 			<button
 				class="flex h-10 min-w-[220px] items-center justify-between rounded-lg bg-white px-3 py-2
-      text-magnum-700 shadow transition-opacity hover:opacity-90"
+      text-magnum-700 shadow-lg transition-opacity hover:opacity-90"
 				use:melt={$trigger}
 				on:m-keydown={(e) => {
 					e.preventDefault(); // Cancel default builder behabiour
@@ -173,17 +173,12 @@
 		</div>
 		<div class="my-2 flex justify-end gap-2">
 			<button
-				class="self-end rounded-md border-2 border-orange-500 px-4 py-1.5 font-medium text-orange-500 bg-transparent hover:bg-orange-50 active:bg-orange-100"
+				class="rounded-md border-2 border-orange-500 px-4 py-1.5 font-medium text-orange-500 shadow-lg bg-transparent hover:bg-orange-50 active:bg-orange-100"
 				on:click={handleCancel}
 			>
 				Cancel
 			</button>
-			<button
-				class="self-end rounded-md bg-orange-500 px-4 py-2 font-medium text-orange-100 hover:opacity-75 active:opacity-50"
-				on:click={handleSave}
-			>
-				Save
-			</button>
+			<Dialog saveCallback={handleSave}/>
 		</div>
 	</div>
 </div>

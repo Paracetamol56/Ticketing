@@ -37,7 +37,6 @@
       });
       return;
     }
-    console.log(result);
     window.sessionStorage.setItem('token', token);
     tickets = result.tickets as TicketModel[];
     count = result.count;
