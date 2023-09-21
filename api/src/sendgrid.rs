@@ -77,15 +77,56 @@ pub async fn send_ticket(
     secret_store: &shuttle_secrets::SecretStore,
     ticket: &Ticket,
 ) -> Result<(), reqwest::Error> {
-    let mut body: String = include_str!("../mail_template.html").to_owned();
-    body = body.replace("{{name}}", &ticket.name)
+    let mut body: String = include_str!("../ticket_template.html").to_owned();
+    body = body
+        .replace("{{name}}", &ticket.name)
         .replace("{{email}}", &ticket.email)
         .replace("{{number}}", &ticket.number.to_string())
-        .replace("{{link}}", format!("https://ticket.matheo-galuba.com/?ticket={}", ticket.id.unwrap().to_hex()).as_str());
+        .replace(
+            "{{link}}",
+            format!(
+                "https://ticket.matheo-galuba.com/?ticket={}",
+                ticket.id.unwrap().to_hex()
+            )
+            .as_str(),
+        );
     send_email(
         secret_store,
-        &User { name: ticket.name.clone(), email: ticket.email.clone() },
+        &User {
+            name: ticket.name.clone(),
+            email: ticket.email.clone(),
+        },
         "Your ticket has been issued",
+        body.as_ref(),
+    )
+    .await
+}
+
+pub async fn send_notification(
+    secret_store: &shuttle_secrets::SecretStore,
+    ticket: &Ticket,
+) -> Result<(), reqwest::Error> {
+    let mut body: String = include_str!("../notification_template.html").to_owned();
+    body = body
+        .replace("{{name}}", &ticket.name)
+        .replace("{{email}}", &ticket.email)
+        .replace("{{number}}", &ticket.number.to_string())
+        .replace("{{status}}", &ticket.status)
+        .replace(
+            "{{link}}",
+            format!(
+                "https://ticket.matheo-galuba.com/?ticket={}",
+                ticket.id.unwrap().to_hex()
+            )
+            .as_str(),
+        );
+    send_email(
+        secret_store,
+        &User {
+            name: ticket.name.clone(),
+            email: ticket.email.clone(),
+        },
+        "Your ticket has been updated",
         body.as_ref(),
     )
     .await

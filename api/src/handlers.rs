@@ -261,6 +261,7 @@ pub async fn get_ticket_page(
 pub struct PutTicketBody {
     status: String,
     note: Option<String>,
+    notify: bool,
 }
 
 // Route PUT `/ticket/:id` taking a json body and returning a json body
@@ -308,6 +309,9 @@ pub async fn put_ticket(
                 .await;
             match ticket {
                 Ok(Some(t)) => {
+                    if body.notify {
+                        let _ = sendgrid::send_notification(&app_state.secret_store, &t).await;
+                    }
                     Ok(response::Json(json!({
                         "id": t.id.unwrap().to_hex(),
                         "number": t.number,
