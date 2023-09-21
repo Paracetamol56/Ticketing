@@ -172,7 +172,7 @@
       <p class="text-xs text-red-500">{messageError}</p>
     {/if}
 		<button
-			class="my-4 self-end rounded-md bg-orange-500 px-4 py-2 font-medium text-orange-100 hover:opacity-75 active:opacity-50"
+			class="my-4 self-end rounded-md bg-orange-500 px-4 py-2 font-medium text-orange-100 shadow-lg hover:opacity-75 active:opacity-50"
 			type="submit"
 		>
 			<span>Submit</span>

@@ -83,9 +83,9 @@
     </a>
     <button
       type="button"
-      class="trigger"
+      class="shadow-lg"
       use:melt={$trigger}
-      aria-label="Update dimensions"
+      aria-label="Info"
     >
       <Info class="square-8" />
     </button>
@@ -124,24 +124,4 @@
       </div>
     {/if}
   </div>
-
-	<!-- div class="flex items-center justify-center gap-1 text-white">
-		<p>
-			Powered by <a class="underline text-orange-100" href="https://www.rust-lang.org">Rust</a>,
-			<a class="underline text-orange-100" href="https://www.shuttle.rs">Shuttle.rs</a>,
-			<a class="underline text-orange-100" href="https://www.svelte.dev">Svelte</a>
-			and <a class="underline text-orange-100" href="https://www.tailwindcss.com">TailwindCSS</a>
-		</p>
-	</div>
-	<div class="flex items-center justify-center gap-1 text-white">
-		<p>
-			Icons by <a class="underline text-orange-100" href="https://lucide.dev">Lucide</a>
-		</p>
-	</div>
-	<div class="flex items-center justify-center gap-1 text-white">
-		<p>
-			Hosted on <a class="underline text-orange-100" href="https://www.netlify.com">Netlify</a> and
-			<a class="underline text-orange-100" href="https://www.shuttle.rs">Shuttle.rs</a>
-		</p>
-	</div> -->
 </footer>

@@ -2,6 +2,7 @@
 	import { onMount, tick } from "svelte";
 	import type TicketModel from "../models/ticket";
   import JsBarcode from "jsbarcode";
+	import { CheckCircle2, Circle, CircleDot, CircleDotDashed } from "lucide-svelte";
 
   onMount(() => {
     JsBarcode("#barcode", ticket.id, {
@@ -12,19 +13,6 @@
       margin: 0,
     });
   });
-
-  function getStatusColor() {
-    switch (ticket.status) {
-      case "open":
-        return "bg-orange-500";
-      case "pending":
-        return "bg-red-500";
-      case "closed":
-        return "bg-green-500";
-      default:
-        return "bg-gray-500";
-    }
-  }
 
   export let ticket: TicketModel;
   export let resetCallback: () => void;
@@ -40,7 +28,15 @@
       Status
     </p>
     <div class="flex justify-center items-center gap-2">
-      <div class={`w-3 h-3 rounded-full ${getStatusColor()}`}></div>
+      {#if ticket.status === 'open'}
+			  <CircleDot class="stroke-orange-500" size="16" />
+      {:else if ticket.status === 'pending'}
+        <CircleDotDashed class="stroke-red-500" size="16" />
+      {:else if ticket.status === 'closed'}
+        <CheckCircle2 class="stroke-green-500" size="16" />
+      {:else}
+        <Circle class="stroke-gray-500" size="16" />
+      {/if}
       <p class="text-base font-bold uppercase">{ticket.status}</p>
     </div>
   </div>
@@ -65,7 +61,7 @@
     <p class="text-sm me-2">
       Message
     </p>
-    <p class="text-sm text-end text-ellipsis overflow-hidden">
+    <p class="h-20 text-sm text-end text-ellipsis overflow-hidden">
       {ticket.message}
     </p>
   </div>

@@ -34,7 +34,7 @@
   </p>
   <div class="flex items-center gap-2">
     <button
-      class="grid h-8 items-center rounded-md bg-white px-3 text-sm text-orange-800 shadow-sm
+      class="grid h-8 items-center rounded-md bg-white px-3 text-sm text-orange-800 shadow-lg
       hover:opacity-75 disabled:cursor-not-allowed disabled:opacity-50 data-[selected]:bg-orange-800
       data-[selected]:text-white"
       use:melt={$prevButton}><ChevronLeft class="square-4" /></button
@@ -44,7 +44,7 @@
         <span>...</span>
       {:else}
         <button
-          class="grid h-8 items-center rounded-md bg-white px-3 text-sm text-orange-800 shadow-sm
+          class="grid h-8 items-center rounded-md bg-white px-3 text-sm text-orange-800 shadow-lg
           hover:opacity-75 disabled:cursor-not-allowed disabled:opacity-50 data-[selected]:bg-orange-800
         data-[selected]:text-white"
           use:melt={$pageTrigger(page)}>{page.value}</button
@@ -52,7 +52,7 @@
       {/if}
     {/each}
     <button
-      class="grid h-8 items-center rounded-md bg-white px-3 text-sm text-orange-800 shadow-sm
+      class="grid h-8 items-center rounded-md bg-white px-3 text-sm text-orange-800 shadow-lg
       hover:opacity-75 disabled:cursor-not-allowed disabled:opacity-50 data-[selected]:bg-orange-800
     data-[selected]:text-white"
       use:melt={$nextButton}><ChevronRight class="square-4" /></button
