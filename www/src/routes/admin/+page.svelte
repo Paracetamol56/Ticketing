@@ -5,8 +5,8 @@
 	import { getTicketPage } from '../../services/api';
 	import TokenForm from './TokenForm.svelte';
 	import TicketRow from './TicketRow.svelte';
+	import { addToast } from '../+layout.svelte';
 
-	let token: string = '';
 	let tickets: TicketModel[] = [];
 
 	onMount(() => {
@@ -16,10 +16,26 @@
 		}
 	});
 
+	const revokeToken = () => {
+		window.sessionStorage.removeItem('token');
+		addToast({
+			data: {
+				title: 'Success',
+				description: 'Token revoked',
+				color: 'bg-green-500'
+			}
+		});
+	};
 	const fetchTickets = async (token: string) => {
 		const result = await getTicketPage(token, 1);
 		if (!result) {
-			// TODO: show error
+			addToast({
+				data: {
+					title: 'Error',
+					description: 'An error occurred while fetching tickets',
+					color: 'bg-red-500'
+				}
+			});
 			return;
 		}
 		window.sessionStorage.setItem('token', token);
@@ -34,7 +50,7 @@
 			<h1 class="my-4 text-white text-6xl font-bold text-center">My tickets</h1>
       <div class="flex gap-4">
         <a class="underline text-orange-500" href="/">Back to app</a>
-        <button class="underline text-orange-500" on:click={() => window.sessionStorage.removeItem('token')}>Logout</button>
+        <button class="underline text-orange-500" on:click={revokeToken}>Forget token</button>
       </div>
 		</div>
 	</header>
@@ -53,7 +69,7 @@
 			<h1 class="my-4 text-white text-6xl font-bold text-center">Please, authenticate</h1>
 		</div>
 	</header>
-  <main>
+  <main class="mb-32">
     <div class="container">
       <TokenForm submitCallback={fetchTickets} />
     </div>

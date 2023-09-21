@@ -27,6 +27,7 @@
   }
 
   export let ticket: TicketModel;
+  export let resetCallback: () => void;
 </script>
 
 <div class="h-full flex flex-col justify-start font-mono text-neutral-800">
@@ -48,7 +49,7 @@
     <p class="text-sm me-2">
       Name
     </p>
-    <p class="text-sm truncate">
+    <p class="text-sm text-end text-ellipsis overflow-hidden">
       {ticket.name}
     </p>
   </div>
@@ -56,7 +57,7 @@
     <p class="text-sm me-2">
       Email
     </p>
-    <p class="text-sm truncate">
+    <p class="text-sm text-end text-ellipsisoverflow-hidden">
       {ticket.email}
     </p>
   </div>
@@ -64,11 +65,12 @@
     <p class="text-sm me-2">
       Message
     </p>
-    <p class="text-sm text-end">
+    <p class="text-sm text-end text-ellipsis overflow-hidden">
       {ticket.message}
     </p>
   </div>
 
-  <a class="mt-auto text-xs text-orange-800 text-center">Get another ticket !
-  </a>
+  <button class="mt-auto text-xs text-orange-800 text-center" on:click={() => resetCallback()}>
+    Get another ticket !
+  </button>
 </div>

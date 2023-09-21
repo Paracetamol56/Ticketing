@@ -12,7 +12,33 @@
 	import TicketDisplay from './TicketDisplay.svelte';
 	import { addToast } from './+layout.svelte';
 
-	let currentTicket: TicketModel;
+	// make this data reactive
+	let currentTicket: TicketModel|null = null;
+	const updateTicket = (ticket: TicketModel) => {
+		currentTicket = ticket;
+	};
+	const resetTicket = () => {
+		// Reset the url to /
+		history.pushState({}, '', '/');
+		currentTicket = null;
+	};
+
+	const loadTicket = async (ticketId: string) => {
+		const ticket = await getTicket(ticketId);
+		getTicket(ticketId).then((ticket) => {
+			if (ticket) {
+				currentTicket = ticket;
+			} else {
+				addToast({
+					data: {
+						title: 'Warning',
+						description: 'The ticket ID you provided is not valid',
+						color: 'bg-orange-500'
+					}
+				});
+			}
+		});
+	};
 
 	// On mount, check the api status
 	onMount(async () => {
@@ -20,21 +46,7 @@
 		const params = new URLSearchParams(window.location.search);
 		const ticketId = params.get('ticket');
 		if (ticketId) {
-			getTicket(ticketId).then((ticket) => {
-				if (ticket) {
-					currentTicket = ticket;
-					console.log(ticket);
-					console.log(ticket.id);
-				} else {
-					addToast({
-						data: {
-							title: 'Warning',
-							description: 'The ticket ID you provided is not valid',
-							color: 'bg-orange-500'
-						}
-					});
-				}
-			});
+			loadTicket(ticketId);
 		}
 	});
 </script>
@@ -59,9 +71,9 @@
 		<div class="flex justify-center flex-col md:flex-row items-center gap-10">
 			<Ticket>
 				{#if currentTicket}
-					<TicketDisplay ticket={currentTicket} />
+					<TicketDisplay ticket={currentTicket} resetCallback={resetTicket} />
 				{:else}
-					<TicketForm />
+					<TicketForm successCallback={updateTicket} />
 				{/if}
 			</Ticket>
 			<Accordion
@@ -70,7 +82,7 @@
 						id: 'item-1',
 						title: 'What is it for?',
 						description:
-							"I realized a lot of people are asking for my attention, probably because I'm an extremely handsome person. This is nice but I don't have enough time to satisfy everyone. So I made this app (probably took longer to make it than to spend one hour with each person) to help me organize my time and to help you get my attention. I hope you'll enjoy it."
+							"Hi, I'm Mathéo (aka Bob) and I realized a lot of people are asking for my attention, probably because I'm an amazing person. This is nice but I don't have enough time to satisfy everyone. So I made this app (probably took longer to make than to spend one hour with each person) to help me organize my time and to help you get in touch with me. I hope you'll enjoy it."
 					},
 					{
 						id: 'item-2',
@@ -80,8 +92,8 @@
 					},
 					{
 						id: 'item-3',
-						title: 'I have a problem',
-						description: 'Well, I think you should figure it out by yourself...'
+						title: 'A problem ?',
+						description: 'Well, first, take a ticket and then figure it out by yourself.'
 					}
 				]}
 			/>

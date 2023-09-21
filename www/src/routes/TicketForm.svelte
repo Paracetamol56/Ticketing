@@ -5,6 +5,7 @@
 	import { issueTicket } from '../services/api';
 	import { goto } from '$app/navigation';
 	import { addToast } from './+layout.svelte';
+	import type TicketModel from '../models/ticket';
 
 	const {
 		elements: { root }
@@ -13,6 +14,8 @@
 	let name = '';
 	let email = '';
 	let message = '';
+
+	export let successCallback: (ticket: TicketModel) => void;
 
 	// TODO: Reactive form validation
 
@@ -38,6 +41,7 @@
 			});
 			const id = ticket.id;
 			goto(`/?ticket=${id}`);
+			successCallback(ticket);
 		});
 	}
 </script>

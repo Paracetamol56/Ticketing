@@ -9,6 +9,7 @@
   
 	import '../app.css';
 	import { fade } from 'svelte/transition';
+	import Ticket from './Ticket.svelte';
 
 	onMount(async () => {
 		checkStatus().then((status) => {
@@ -42,6 +43,12 @@
 
   export { addToast };
 </script>
+
+<!-- Head -->
+<svelte:head>
+	<title>Ticketing - Mathéo Galuba</title>
+	<meta name="description" content="Ticketing app to get in touch with me" />
+</svelte:head>
 
 <!-- Toast list -->
 <div
