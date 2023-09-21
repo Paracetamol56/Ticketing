@@ -72,6 +72,7 @@ async fn axum(
     let router = Router::new()
         .route("/", get(handlers::home))
         .route("/status", get(handlers::status))
+        .route("/statistics", get(handlers::statistics.layer(admin_aut_middleware.clone())))
         .route(
             "/ticket",
             get(handlers::get_ticket_page.layer(admin_aut_middleware.clone()))

@@ -1,5 +1,5 @@
 use axum::{extract, response};
-use chrono::Utc;
+use chrono::{Utc, DateTime};
 use futures::stream::StreamExt;
 use mongodb::bson::{doc, oid::ObjectId};
 use regex::Regex;
@@ -22,6 +22,46 @@ pub async fn status() -> response::Json<Value> {
 
     response::Json(response)
 }
+
+pub async fn statistics(
+    extract::State(app_state): extract::State<AppState>,
+) -> Result<response::Json<Value>, StatusCode> {
+    let collection = app_state.database.collection::<Ticket>("tickets");
+
+    let open_tickets = collection
+        .count_documents(doc! { "status": "open" }, None)
+        .await
+        .unwrap_or(0);
+    let pending_tickets = collection
+        .count_documents(doc! { "status": "pending" }, None)
+        .await
+        .unwrap_or(0);
+    let closed_tickets = collection
+        .count_documents(doc! { "status": "closed" }, None)
+        .await
+        .unwrap_or(0);
+    let last_ticket = collection
+        .find_one(
+            doc! {},
+            mongodb::options::FindOneOptions::builder()
+                .sort(doc! { "created_at": -1 })
+                .build(),
+        )
+        .await
+        .unwrap_or(None);
+    let mut last_ticket_date: Option<DateTime<Utc>> = None;
+    if let Some(t) = last_ticket {
+        last_ticket_date = Some(t.created_at)
+    }
+
+    Ok(response::Json(json!({
+        "open_tickets": open_tickets,
+        "pending_tickets": pending_tickets,
+        "closed_tickets": closed_tickets,
+        "last_ticket": last_ticket_date,
+    })))
+}
+
 
 #[derive(Debug, Deserialize)]
 pub struct PostTicketBody {
