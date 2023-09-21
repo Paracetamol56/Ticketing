@@ -16,23 +16,23 @@
 		let token = window.sessionStorage.getItem('token');
 		let result: TicketModel | null = await updateTicket(token!, ticket.id, new_status, new_note);
 		if (!result) {
-      addToast({
-        data: {
-          title: 'Error',
-          description: 'An error occurred while updating the ticket',
-          color: 'bg-red-500'
-        }
-      });
-      return;
-    }
-    ticket = result!;
-    addToast({
-      data: {
-        title: 'Success',
-        description: 'The ticket has been updated',
-        color: 'bg-green-500'
-      }
-    });
+			addToast({
+				data: {
+					title: 'Error',
+					description: 'An error occurred while updating the ticket',
+					color: 'bg-red-500'
+				}
+			});
+			return;
+		}
+		ticket = result!;
+		addToast({
+			data: {
+				title: 'Success',
+				description: 'The ticket has been updated',
+				color: 'bg-green-500'
+			}
+		});
 	};
 	const handleCancel = () => {
 		new_note = ticket.note || '';

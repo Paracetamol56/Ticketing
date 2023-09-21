@@ -56,7 +56,7 @@ async function updateTicket(token: string, id: string, status: string, note: str
         'Authorization': token,
       }
     });
-    return response.data.ticket as TicketModel;
+    return response.data as TicketModel;
   } catch (error) {
     console.error(error);
     return null;
