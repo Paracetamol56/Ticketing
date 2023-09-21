@@ -47,7 +47,7 @@ pub async fn post_ticket(
     }
     // body.message must be at least 10 characters long and 1000 characters at most
     let message = body.message.trim();
-    if message.len() < 10 && message.len() > 1000 {
+    if message.len() < 3 && message.len() > 1000 {
         return Err(StatusCode::BAD_REQUEST);
     }
 
