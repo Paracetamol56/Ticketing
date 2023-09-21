@@ -22,7 +22,7 @@
     elements: { root, input },
     states: { checked },
   } = createSwitch({
-    defaultChecked: true,
+    defaultChecked: false,
   });
 </script>
  
@@ -46,7 +46,7 @@
         Are you sure you want to persist the changes?
       </h2>
       <p use:melt={$description} class="mb-5 mt-2 leading-normal text-zinc-600">
-        An email notification will be sent to the user, disable this option below if you don't want to notify the user.
+        An email notification can sent to the user, enable this option below if you want to notify the user.
       </p>
 
       <div class="flex items-center">
