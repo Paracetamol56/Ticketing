@@ -7,12 +7,12 @@ publish = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-shuttle-runtime = { version = "0.26.0", default-features = false }
+shuttle-runtime = { version = "0.27.0", default-features = false }
 axum = "0.6.18"
-shuttle-axum = "0.26.0"
+shuttle-axum = "0.27.0"
 mongodb = "2.6.0"
-shuttle-shared-db = { version = "0.26.0", features = ["mongodb"] }
-shuttle-secrets = "0.26.0"
+shuttle-shared-db = { version = "0.27.0", features = ["mongodb"] }
+shuttle-secrets = "0.27.0"
 tower = "0.4.13"
 tower-http = { version = "0.4.4", features = ["cors", "timeout"] }
 chrono = "0.4.31"
