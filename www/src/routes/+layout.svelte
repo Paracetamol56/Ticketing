@@ -49,6 +49,7 @@
 	<title>Ticketing - Mathéo Galuba</title>
 	<meta name="description" content="Ticketing app to get in touch with me" />
 	<script data-host="https://cdn.micrometrics.es" data-dnt="false" src="https://cdn.micrometrics.es/js/script.js" id="ZwSg9rf6GA" async defer></script>
+  <script async src="https://analytics.matheo-galuba.com/script.js" data-website-id="ab2a9133-967b-49d6-9c40-32af86338112"></script>
 </svelte:head>
 
 <!-- Toast list -->
