@@ -5,13 +5,7 @@ mod ticket;
 use std::sync::Arc;
 
 use axum::{
-    body::{boxed, Body},
-    handler::Handler,
-    http::Request,
-    middleware::{Next, self},
-    response::Response,
-    routing::get,
-    Router,
+    body::Body, handler::Handler, http::Request, middleware::{self, Next}, response::Response, routing::get, Router
 };
 use mongodb::Database;
 use reqwest::StatusCode;
@@ -20,9 +14,9 @@ use tower_http::{
     timeout::TimeoutLayer,
 };
 
-async fn admin_auth<B>(
-    req: Request<B>,
-    next: Next<B>,
+async fn admin_auth(
+    req: Request<Body>,
+    next: Next,
     admin_token: String,
 ) -> axum::response::Response {
     let request_token = req
@@ -34,7 +28,7 @@ async fn admin_auth<B>(
         eprintln!("Unauthorized request to admin endpoint");
         let response = Response::builder()
             .status(StatusCode::UNAUTHORIZED)
-            .body(boxed(Body::empty()))
+            .body(Body::empty())
             .unwrap();
         return response;
     }
@@ -44,13 +38,13 @@ async fn admin_auth<B>(
 
 #[derive(Clone)]
 pub struct AppState {
-    pub secret_store: shuttle_secrets::SecretStore,
+    pub secret_store: shuttle_runtime::SecretStore,
     pub database: Arc<mongodb::Database>,
 }
 
 #[shuttle_runtime::main]
 async fn axum(
-    #[shuttle_secrets::Secrets] secret_store: shuttle_secrets::SecretStore,
+    #[shuttle_runtime::Secrets] secret_store: shuttle_runtime::SecretStore,
     #[shuttle_shared_db::MongoDb(local_uri = "{secrets.MONGO_CONNECTION_STRING}")] db: Database,
 ) -> shuttle_axum::ShuttleAxum {
     let state = AppState {

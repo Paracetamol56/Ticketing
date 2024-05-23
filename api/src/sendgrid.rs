@@ -11,7 +11,7 @@ pub struct User {
 }
 
 async fn send_email(
-    secret_store: &shuttle_secrets::SecretStore,
+    secret_store: &shuttle_runtime::SecretStore,
     recipient: &User,
     subject: &str,
     body: &str,
@@ -74,7 +74,7 @@ async fn send_email(
 }
 
 pub async fn send_ticket(
-    secret_store: &shuttle_secrets::SecretStore,
+    secret_store: &shuttle_runtime::SecretStore,
     ticket: &Ticket,
 ) -> Result<(), reqwest::Error> {
     let mut body: String = include_str!("../ticket_template.html").to_owned();
@@ -103,7 +103,7 @@ pub async fn send_ticket(
 }
 
 pub async fn send_notification(
-    secret_store: &shuttle_secrets::SecretStore,
+    secret_store: &shuttle_runtime::SecretStore,
     ticket: &Ticket,
 ) -> Result<(), reqwest::Error> {
     let mut body: String = include_str!("../notification_template.html").to_owned();
