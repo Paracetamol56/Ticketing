@@ -173,6 +173,7 @@
     {/if}
 		<button
 			class="my-4 self-end rounded-md bg-orange-500 px-4 py-2 font-medium text-orange-100 shadow-lg hover:opacity-75 active:opacity-50"
+			data-umami-event="New ticket"
 			type="submit"
 		>
 			<span>Submit</span>
