@@ -1,0 +1,31 @@
+
+name: Deploy Rust Backend (API)
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "api/**"
+      - ".github/workflows/deploy-backend.yml"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+
+      - name: Build and Push Docker Image
+        run: |
+          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/ticketing-api:latest
+          docker build -t $IMAGE_NAME ./api
+          docker push $IMAGE_NAME
