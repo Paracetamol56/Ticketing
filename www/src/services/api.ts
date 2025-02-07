@@ -1,7 +1,7 @@
 import type TicketModel from '../models/ticket';
 import axios from 'axios';
 
-const API_URL: string = "https://ticketing.shuttleapp.rs";
+const API_URL: string = "http://localhost:8080";
 
 async function checkStatus(): Promise<boolean> {
   try {
@@ -13,7 +13,7 @@ async function checkStatus(): Promise<boolean> {
   }
 }
 
-async function getTicket(id: string): Promise<TicketModel|null> {
+async function getTicket(id: string): Promise<TicketModel | null> {
   try {
     const response = await axios.get(`${API_URL}/ticket/${id}`);
     return response.data as TicketModel;
@@ -32,7 +32,7 @@ interface TicketPage {
   status: string | null;
 }
 
-async function getTicketPage(token: string, page: number): Promise<TicketPage|null> {
+async function getTicketPage(token: string, page: number): Promise<TicketPage | null> {
   try {
     const response = await axios.get(`${API_URL}/ticket?page=${page}&limit=10`, {
       headers: {
@@ -46,7 +46,7 @@ async function getTicketPage(token: string, page: number): Promise<TicketPage|nu
   }
 }
 
-async function updateTicket(token: string, id: string, status: string, note: string|null, notify: boolean): Promise<TicketModel|null> {
+async function updateTicket(token: string, id: string, status: string, note: string | null, notify: boolean): Promise<TicketModel | null> {
   try {
     const response = await axios.patch(`${API_URL}/ticket/${id}`, {
       status,
