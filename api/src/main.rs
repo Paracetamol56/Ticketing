@@ -1,55 +1,44 @@
+use auth::admin_auth;
+use axum::{handler::Handler, middleware, routing::get, Router};
+use dotenv::dotenv;
+use log;
+use mongodb::Database;
+use tower_http::{
+    cors::{Any, CorsLayer},
+    timeout::TimeoutLayer,
+    trace::TraceLayer,
+};
+
+mod auth;
 mod handlers;
 mod sendgrid;
 mod ticket;
 
-use std::sync::Arc;
-
-use axum::{
-    body::Body, handler::Handler, http::Request, middleware::{self, Next}, response::Response, routing::get, Router
-};
-use mongodb::Database;
-use reqwest::StatusCode;
-use tower_http::{
-    cors::{Any, CorsLayer},
-    timeout::TimeoutLayer,
-};
-
-async fn admin_auth(
-    req: Request<Body>,
-    next: Next,
-    admin_token: String,
-) -> axum::response::Response {
-    let request_token = req
-        .headers()
-        .get("Authorization")
-        .and_then(|header| header.to_str().ok());
-
-    if request_token != Some(&admin_token) {
-        eprintln!("Unauthorized request to admin endpoint");
-        let response = Response::builder()
-            .status(StatusCode::UNAUTHORIZED)
-            .body(Body::empty())
-            .unwrap();
-        return response;
+// Database initialization
+async fn init_db() -> Result<Database, mongodb::error::Error> {
+    let client = mongodb::Client::with_uri_str("mongodb://localhost:27017/").await;
+    match client {
+        Ok(client) => {
+            log::info!("Connected to database");
+            Ok(client.database("tickets"))
+        }
+        Err(e) => {
+            log::error!("Failed to connect to database: {}", e);
+            Err(e)
+        }
     }
-
-    next.run(req).await
 }
 
 #[derive(Clone)]
-pub struct AppState {
-    pub secret_store: shuttle_runtime::SecretStore,
-    pub database: Arc<mongodb::Database>,
+struct AppState {
+    db: Database,
 }
 
-#[shuttle_runtime::main]
-async fn axum(
-    #[shuttle_runtime::Secrets] secret_store: shuttle_runtime::SecretStore,
-    #[shuttle_shared_db::MongoDb(local_uri = "{secrets.MONGO_CONNECTION_STRING}")] db: Database,
-) -> shuttle_axum::ShuttleAxum {
+#[tokio::main]
+async fn main() {
+    dotenv().ok();
     let state = AppState {
-        secret_store: secret_store.clone(),
-        database: Arc::new(db),
+        db: init_db().await.expect("Failed to connect to database"),
     };
 
     let cors = CorsLayer::new()
@@ -58,28 +47,34 @@ async fn axum(
         .allow_origin(Any)
         .expose_headers(Any);
 
-    let admin_aut_middleware = middleware::from_fn(move |req, next| {
-        let admin_token = secret_store.get("ADMIN_TOKEN").unwrap();
+    let admin_auth_middleware = middleware::from_fn(move |req, next| {
+        let admin_token = dotenv::var("ADMIN_TOKEN").expect("ADMIN_TOKEN must be set");
         admin_auth(req, next, admin_token)
     });
-    
+
     let router = Router::new()
         .route("/", get(handlers::home))
         .route("/status", get(handlers::status))
-        .route("/statistics", get(handlers::statistics.layer(admin_aut_middleware.clone())))
+        .route(
+            "/statistics",
+            get(handlers::statistics.layer(admin_auth_middleware.clone())),
+        )
         .route(
             "/ticket",
-            get(handlers::get_ticket_page.layer(admin_aut_middleware.clone()))
+            get(handlers::get_ticket_page.layer(admin_auth_middleware.clone()))
                 .post(handlers::post_ticket),
         )
         .route(
-            "/ticket/:id",
+            "/ticket/{id}",
             get(handlers::get_ticket)
-                .patch(handlers::put_ticket.layer(admin_aut_middleware.clone()))
+                .patch(handlers::put_ticket.layer(admin_auth_middleware.clone())),
         )
         .layer(cors)
         .layer(TimeoutLayer::new(std::time::Duration::from_secs(30)))
+        .layer(TraceLayer::new_for_http())
         .with_state(state);
 
-    Ok(router.into())
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+    log::info!("Listening on: {}", listener.local_addr().unwrap());
+    axum::serve(listener, router).await.unwrap();
 }

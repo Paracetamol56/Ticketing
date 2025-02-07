@@ -1,6 +1,6 @@
 use axum::{extract, response};
-use chrono::{Utc, DateTime};
-use futures::stream::StreamExt;
+use chrono::{DateTime, Utc};
+use futures::StreamExt;
 use mongodb::bson::{doc, oid::ObjectId};
 use regex::Regex;
 use reqwest::StatusCode;
@@ -26,7 +26,7 @@ pub async fn status() -> response::Json<Value> {
 pub async fn statistics(
     extract::State(app_state): extract::State<AppState>,
 ) -> Result<response::Json<Value>, StatusCode> {
-    let collection = app_state.database.collection::<Ticket>("tickets");
+    let collection = app_state.db.collection::<Ticket>("tickets");
 
     let open_tickets = collection
         .count_documents(doc! { "status": "open" }, None)
@@ -62,7 +62,6 @@ pub async fn statistics(
     })))
 }
 
-
 #[derive(Debug, Deserialize)]
 pub struct PostTicketBody {
     name: String,
@@ -92,7 +91,7 @@ pub async fn post_ticket(
     }
 
     // Create the ticket in the database
-    let collection = app_state.database.collection::<Ticket>("tickets");
+    let collection = app_state.db.collection::<Ticket>("tickets");
 
     // Fetch the ticket with the highest number
     let max_number_ticket = collection
@@ -130,7 +129,14 @@ pub async fn post_ticket(
         return Err(StatusCode::INTERNAL_SERVER_ERROR);
     }
     // Add the id to the ticket
-    ticket.id = Some(insert_result.unwrap().inserted_id.as_object_id().unwrap().clone());
+    ticket.id = Some(
+        insert_result
+            .unwrap()
+            .inserted_id
+            .as_object_id()
+            .unwrap()
+            .clone(),
+    );
 
     // Send the email
     let recipient: sendgrid::User = sendgrid::User {
@@ -138,7 +144,7 @@ pub async fn post_ticket(
         email: body.email,
     };
 
-    let sending = sendgrid::send_ticket(&app_state.secret_store, &ticket).await;
+    let sending = sendgrid::send_ticket(&ticket).await;
 
     match sending {
         Ok(_) => {
@@ -172,7 +178,7 @@ pub async fn get_ticket(
     extract::State(app_state): extract::State<AppState>,
     extract::Path(id): extract::Path<String>,
 ) -> Result<response::Json<Value>, StatusCode> {
-    let collection = app_state.database.collection::<Ticket>("tickets");
+    let collection = app_state.db.collection::<Ticket>("tickets");
 
     let object_id = ObjectId::parse_str(&id.as_str());
     if let Err(_) = object_id {
@@ -228,7 +234,7 @@ pub async fn get_ticket_page(
         return Err(StatusCode::BAD_REQUEST);
     }
     // query.limit must be at least 1 and at most 100
-    if query.limit < 1 && query.limit > 100 {
+    if query.limit < 1 || query.limit > 100 {
         return Err(StatusCode::BAD_REQUEST);
     }
     // query.status must be either "open", "pending", or "closed"
@@ -239,7 +245,7 @@ pub async fn get_ticket_page(
         }
     }
 
-    let collection = app_state.database.collection::<Ticket>("tickets");
+    let collection = app_state.db.collection::<Ticket>("tickets");
 
     let mut filter = doc! {};
     if let Some(status) = &query.status {
@@ -258,7 +264,10 @@ pub async fn get_ticket_page(
         )
         .await;
 
-    let total_tickets = collection.count_documents(filter.clone(), None).await.unwrap();
+    let total_tickets = collection
+        .count_documents(filter.clone(), None)
+        .await
+        .unwrap();
 
     match cursor {
         Ok(mut cursor) => {
@@ -324,7 +333,7 @@ pub async fn put_ticket(
         }
     }
 
-    let collection = app_state.database.collection::<Ticket>("tickets");
+    let collection = app_state.db.collection::<Ticket>("tickets");
 
     let object_id = ObjectId::parse_str(&id.as_str());
     if let Err(_) = object_id {
@@ -350,7 +359,7 @@ pub async fn put_ticket(
             match ticket {
                 Ok(Some(t)) => {
                     if body.notify {
-                        let _ = sendgrid::send_notification(&app_state.secret_store, &t).await;
+                        let _ = sendgrid::send_notification(&t).await;
                     }
                     Ok(response::Json(json!({
                         "id": t.id.unwrap().to_hex(),

@@ -10,13 +10,10 @@ pub struct User {
     pub email: String,
 }
 
-async fn send_email(
-    secret_store: &shuttle_runtime::SecretStore,
-    recipient: &User,
-    subject: &str,
-    body: &str,
-) -> Result<(), reqwest::Error> {
-    let api_key: String = secret_store.get("SENDGRID_API_KEY").unwrap();
+async fn send_email(recipient: &User, subject: &str, body: &str) -> Result<(), reqwest::Error> {
+    let api_key: String = dotenv::var("SENDGRID_API_KEY").expect("SENDGRID_API_KEY must be set");
+    let sender_email: String = dotenv::var("SENDER_EMAIL").expect("SENDER_EMAIL must be set");
+    let sender_name: String = dotenv::var("SENDER_NAME").expect("SENDER_NAME must be set");
 
     let request_body = json!({
         "personalizations": [
@@ -31,8 +28,8 @@ async fn send_email(
             }
         ],
         "from": {
-            "email": secret_store.get("SENDER_EMAIL").unwrap(),
-            "name": secret_store.get("SENDER_NAME").unwrap()
+            "email": sender_email,
+            "name": sender_name,
         },
         "content": [
             {
@@ -73,10 +70,7 @@ async fn send_email(
     Ok(())
 }
 
-pub async fn send_ticket(
-    secret_store: &shuttle_runtime::SecretStore,
-    ticket: &Ticket,
-) -> Result<(), reqwest::Error> {
+pub async fn send_ticket(ticket: &Ticket) -> Result<(), reqwest::Error> {
     let mut body: String = include_str!("../ticket_template.html").to_owned();
     body = body
         .replace("{{name}}", &ticket.name)
@@ -91,7 +85,6 @@ pub async fn send_ticket(
             .as_str(),
         );
     send_email(
-        secret_store,
         &User {
             name: ticket.name.clone(),
             email: ticket.email.clone(),
@@ -102,10 +95,7 @@ pub async fn send_ticket(
     .await
 }
 
-pub async fn send_notification(
-    secret_store: &shuttle_runtime::SecretStore,
-    ticket: &Ticket,
-) -> Result<(), reqwest::Error> {
+pub async fn send_notification(ticket: &Ticket) -> Result<(), reqwest::Error> {
     let mut body: String = include_str!("../notification_template.html").to_owned();
     body = body
         .replace("{{name}}", &ticket.name)
@@ -121,7 +111,6 @@ pub async fn send_notification(
             .as_str(),
         );
     send_email(
-        secret_store,
         &User {
             name: ticket.name.clone(),
             email: ticket.email.clone(),
