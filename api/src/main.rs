@@ -1,10 +1,10 @@
 use auth::admin_auth;
 use axum::{handler::Handler, middleware, routing::get, Router};
 use dotenv::dotenv;
-use log;
+use http::Method;
 use mongodb::Database;
 use tower_http::{
-    cors::{Any, CorsLayer},
+    cors::{AllowOrigin, Any, CorsLayer},
     timeout::TimeoutLayer,
     trace::TraceLayer,
 };
@@ -43,8 +43,10 @@ async fn main() {
 
     let cors = CorsLayer::new()
         .allow_headers(Any)
-        .allow_methods(Any)
-        .allow_origin(Any)
+        .allow_methods([Method::GET, Method::POST, Method::OPTIONS, Method::PATCH])
+        .allow_origin(AllowOrigin::exact(
+            "https://ticket.matheo-galuba.com".parse().unwrap(),
+        ))
         .expose_headers(Any);
 
     let admin_auth_middleware = middleware::from_fn(move |req, next| {
@@ -69,6 +71,7 @@ async fn main() {
             get(handlers::get_ticket)
                 .patch(handlers::put_ticket.layer(admin_auth_middleware.clone())),
         )
+        .fallback(handlers::not_found)
         .layer(cors)
         .layer(TimeoutLayer::new(std::time::Duration::from_secs(30)))
         .layer(TraceLayer::new_for_http())

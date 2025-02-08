@@ -9,8 +9,22 @@ use serde_json::{json, Value};
 
 use crate::{sendgrid, ticket::Ticket, AppState};
 
-pub async fn home() -> &'static str {
-    "Welcome to the ticketing system API made by Mathéo GALUBA with Rust, Axum, MongoDB, and Shuttle!"
+pub async fn not_found() -> StatusCode {
+    StatusCode::NOT_FOUND
+}
+
+pub async fn home() -> response::Json<Value> {
+    let response = json!({
+        "greetings": "Welcome to the Ticketing API!",
+        "routes": {
+            "status": "GET /status",
+            "create_ticket": "POST /ticket",
+            "get_ticket": "GET /ticket/{id}"
+        },
+        "documentation": "https://api.ticket.matheo-galuba.com/docs"
+    });
+
+    response::Json(response)
 }
 
 // Route `/status` returning a JSON body with a status message and the uptime
