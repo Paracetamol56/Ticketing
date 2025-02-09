@@ -43,7 +43,7 @@ async fn main() {
 
     let cors = CorsLayer::new()
         .allow_headers(Any)
-        .allow_methods([Method::GET, Method::POST, Method::OPTIONS, Method::PATCH])
+        .allow_methods(Any)
         .allow_origin(AllowOrigin::exact(
             "https://ticket.matheo-galuba.com".parse().unwrap(),
         ))
