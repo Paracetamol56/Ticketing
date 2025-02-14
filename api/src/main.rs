@@ -1,7 +1,11 @@
 use auth::admin_auth;
-use axum::{handler::Handler, middleware, routing::get, Router};
+use axum::{
+    handler::Handler,
+    middleware,
+    routing::{get, post},
+    Router,
+};
 use dotenv::dotenv;
-use http::Method;
 use mongodb::Database;
 use tower_http::{
     cors::{AllowOrigin, Any, CorsLayer},
@@ -16,7 +20,9 @@ mod ticket;
 
 // Database initialization
 async fn init_db() -> Result<Database, mongodb::error::Error> {
-    let client = mongodb::Client::with_uri_str("mongodb://localhost:27017/").await;
+    let connection_string =
+        dotenv::var("MONGO_CONNECTION_STRING").expect("MONGO_CONNECTION_STRING must be set");
+    let client = mongodb::Client::with_uri_str(connection_string).await;
     match client {
         Ok(client) => {
             log::info!("Connected to database");
@@ -62,12 +68,12 @@ async fn main() {
             get(handlers::statistics.layer(admin_auth_middleware.clone())),
         )
         .route(
-            "/ticket",
-            get(handlers::get_ticket_page.layer(admin_auth_middleware.clone()))
-                .post(handlers::post_ticket),
+            "/tickets",
+            post(handlers::post_ticket)
+                .get(handlers::get_ticket_page.layer(admin_auth_middleware.clone())),
         )
         .route(
-            "/ticket/{id}",
+            "/tickets/{id}",
             get(handlers::get_ticket)
                 .patch(handlers::put_ticket.layer(admin_auth_middleware.clone())),
         )
