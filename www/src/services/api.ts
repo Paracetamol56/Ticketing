@@ -15,7 +15,7 @@ async function checkStatus(): Promise<boolean> {
 
 async function getTicket(id: string): Promise<TicketModel | null> {
   try {
-    const response = await axios.get(`${API_URL}/ticket/${id}`);
+    const response = await axios.get(`${API_URL}/tickets/${id}`);
     return response.data as TicketModel;
   } catch (error) {
     console.error(error);
@@ -34,7 +34,7 @@ interface TicketPage {
 
 async function getTicketPage(token: string, page: number): Promise<TicketPage | null> {
   try {
-    const response = await axios.get(`${API_URL}/ticket?page=${page}&limit=10`, {
+    const response = await axios.get(`${API_URL}/tickets?page=${page}&limit=10`, {
       headers: {
         'Authorization': token,
       }
@@ -48,7 +48,7 @@ async function getTicketPage(token: string, page: number): Promise<TicketPage | 
 
 async function updateTicket(token: string, id: string, status: string, note: string | null, notify: boolean): Promise<TicketModel | null> {
   try {
-    const response = await axios.patch(`${API_URL}/ticket/${id}`, {
+    const response = await axios.patch(`${API_URL}/tickets/${id}`, {
       status,
       note,
       notify,
@@ -70,7 +70,7 @@ async function issueTicket(
   message: string,
 ): Promise<TicketModel | null> {
   try {
-    const response = await axios.post(`${API_URL}/ticket`, {
+    const response = await axios.post(`${API_URL}/tickets`, {
       name,
       email,
       message,
