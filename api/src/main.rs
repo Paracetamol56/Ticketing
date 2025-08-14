@@ -1,89 +1,81 @@
-use auth::admin_auth;
-use axum::{
-    handler::Handler,
-    middleware,
-    routing::{get, post},
-    Router,
-};
+use env_logger::Env;
 use dotenv::dotenv;
-use mongodb::Database;
-use tower_http::{
-    cors::{AllowOrigin, Any, CorsLayer},
-    timeout::TimeoutLayer,
-    trace::TraceLayer,
-};
+use actix_cors::Cors;
+use actix_web::{middleware::{Logger, NormalizePath}, http, web, App, HttpServer, HttpResponse, Responder};
+use r2d2_sqlite::SqliteConnectionManager;
 
-mod auth;
-mod handlers;
-mod sendgrid;
-mod ticket;
+mod middlewares;
+mod tickets;
+mod utils;
 
-// Database initialization
-async fn init_db() -> Result<Database, mongodb::error::Error> {
-    let connection_string =
-        dotenv::var("MONGO_CONNECTION_STRING").expect("MONGO_CONNECTION_STRING must be set");
-    let client = mongodb::Client::with_uri_str(connection_string).await;
-    match client {
-        Ok(client) => {
-            log::info!("Connected to database");
-            Ok(client.database("tickets"))
-        }
-        Err(e) => {
-            log::error!("Failed to connect to database: {}", e);
-            Err(e)
-        }
-    }
+pub type Pool = r2d2::Pool<r2d2_sqlite::SqliteConnectionManager>;
+pub type Connection = r2d2::PooledConnection<r2d2_sqlite::SqliteConnectionManager>;
+
+async fn get_status() -> impl Responder {
+    HttpResponse::Ok()
+        .json(serde_json::json!({
+            "status": "ok",
+            "version": env!("CARGO_PKG_VERSION"),
+        }))
 }
 
-#[derive(Clone)]
-struct AppState {
-    db: Database,
+fn init_db(conn: &Connection) -> Result<(), rusqlite::Error> {
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS tickets (
+            uuid TEXT PRIMARY KEY,
+            number INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            message TEXT NOT NULL,
+            note TEXT,
+            status TEXT NOT NULL CHECK (status IN ('open', 'closed', 'pending')),
+            created_at TEXT NOT NULL,
+            updated_at TEXT,
+            closed_at TEXT
+        );",
+        [],
+    )?;
+    Ok(())
 }
-
-#[tokio::main]
-async fn main() {
+    
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
     dotenv().ok();
-    let state = AppState {
-        db: init_db().await.expect("Failed to connect to database"),
-    };
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
 
-    let cors = CorsLayer::new()
-        .allow_headers(Any)
-        .allow_methods(Any)
-        .allow_origin(AllowOrigin::exact(
-            "https://ticket.matheo-galuba.com".parse().unwrap(),
-        ))
-        .expose_headers(Any);
+    let manager = SqliteConnectionManager::file("tickets.sqlite3");
+    let pool = Pool::new(manager).unwrap();
+    match init_db(&pool.get().expect("Failed to get DB connection")) {
+        Ok(_) => log::info!("Database initialized successfully"),
+        Err(e) => log::error!("Failed to initialize database: {}", e),
+    }
+    let cors = Cors::default()
+        .allow_any_origin()
+        .allowed_methods(vec!["GET", "POST", "PATCH", "DELETE", "OPTIONS"])
+        .allowed_headers(vec![http::header::CONTENT_TYPE, http::header::AUTHORIZATION])
+        .supports_credentials()
+        .max_age(3600);
 
-    let admin_auth_middleware = middleware::from_fn(move |req, next| {
-        let admin_token = dotenv::var("ADMIN_TOKEN").expect("ADMIN_TOKEN must be set");
-        admin_auth(req, next, admin_token)
-    });
 
-    let router = Router::new()
-        .route("/", get(handlers::home))
-        .route("/status", get(handlers::status))
-        .route(
-            "/statistics",
-            get(handlers::statistics.layer(admin_auth_middleware.clone())),
-        )
-        .route(
-            "/tickets",
-            post(handlers::post_ticket)
-                .get(handlers::get_ticket_page.layer(admin_auth_middleware.clone())),
-        )
-        .route(
-            "/tickets/{id}",
-            get(handlers::get_ticket)
-                .patch(handlers::put_ticket.layer(admin_auth_middleware.clone())),
-        )
-        .fallback(handlers::not_found)
-        .layer(cors)
-        .layer(TimeoutLayer::new(std::time::Duration::from_secs(30)))
-        .layer(TraceLayer::new_for_http())
-        .with_state(state);
+    log::info!("starting HTTP server at http://localhost:8080");
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
-    log::info!("Listening on: {}", listener.local_addr().unwrap());
-    axum::serve(listener, router).await.unwrap();
+    HttpServer::new(move || {
+        let cors = Cors::default()
+            .allow_origin(vec!["localhost", "tickets.matheo-galuba.com"])
+            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+            .allowed_headers(vec![http::header::CONTENT_TYPE, http::header::AUTHORIZATION])
+            .supports_credentials()
+            .max_age(3600);
+
+        App::new()
+            .app_data(web::Data::new(pool.clone()))
+            .wrap(cors)
+            .wrap(NormalizePath::trim())
+            .wrap(Logger::new("%a %t \"%r\" %s %b \"%{referer}i\" \"%{user-agent}i\" %t"))
+            .route("/status", web::get().to(get_status))
+            .configure(tickets::routes::configure)
+    })
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
 }

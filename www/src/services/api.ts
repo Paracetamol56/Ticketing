@@ -76,7 +76,7 @@ async function issueTicket(
       message,
     });
     console.log(response);
-    return response.data.ticket as TicketModel;
+    return response.data as TicketModel;
   } catch (error) {
     console.error(error);
     return null;
