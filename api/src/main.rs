@@ -49,33 +49,29 @@ async fn main() -> std::io::Result<()> {
         Ok(_) => log::info!("Database initialized successfully"),
         Err(e) => log::error!("Failed to initialize database: {}", e),
     }
-    let cors = Cors::default()
-        .allow_any_origin()
-        .allowed_methods(vec!["GET", "POST", "PATCH", "DELETE", "OPTIONS"])
-        .allowed_headers(vec![http::header::CONTENT_TYPE, http::header::AUTHORIZATION])
-        .supports_credentials()
-        .max_age(3600);
 
+    let address = "0.0.0.0";
 
-    log::info!("starting HTTP server at http://localhost:8080");
+    log::info!("starting HTTP server at http://{}:8080", address);
 
     HttpServer::new(move || {
         let cors = Cors::default()
             .allowed_origin("https://ticket.matheo-galuba.com")
-            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+            .allowed_methods(vec!["GET", "POST", "PATCH", "DELETE", "OPTIONS"])
             .allowed_headers(vec![http::header::CONTENT_TYPE, http::header::AUTHORIZATION])
             .supports_credentials()
             .max_age(3600);
 
         App::new()
             .app_data(web::Data::new(pool.clone()))
-            .wrap(cors)
+            .wrap(cors
+            )
             .wrap(NormalizePath::trim())
             .wrap(Logger::new("%a %t \"%r\" %s %b \"%{referer}i\" \"%{user-agent}i\" %t"))
             .route("/status", web::get().to(get_status))
             .configure(tickets::routes::configure)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind((address, 8080))?
     .run()
     .await
 }
