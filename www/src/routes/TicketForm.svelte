@@ -16,68 +16,68 @@
 	let email = '';
 	let emailError = '';
 	let message = '';
-  let messageCharactersLeft = 1000;
+	let messageCharactersLeft = 1000;
 	let messageError = '';
 
 	export let successCallback: (ticket: TicketModel) => void;
 
-  function validateName(): boolean {
-    if (name.length == 0) {
-      nameError = 'Name is required';
-      return false;
-    }
-    if (name.length < 3) {
-      nameError = 'Name must be at least 3 characters long';
-      return false;
-    }
-    if (name.length > 100) {
-      nameError = 'Name must be less than 100 characters long';
-      return false;
-    }
-    nameError = '';
-    return true;
-  }
-  function validateEmail(): boolean {
-    if (email.length == 0) {
-      emailError = 'Email is required';
-      return false;
-    }
-    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      emailError = 'Invalid email';
-      return false;
-    }
-    emailError = '';
-    return true;
-  }
-  function validateMessage(): boolean {
-    if (message.length == 0) {
-      messageError = 'Message is required';
-      return false;
-    }
-    if (message.length < 3) {
-      messageError = 'Message must be at least 3 characters long';
-      return false;
-    }
-    if (message.length > 1000) {
-      messageError = 'Message must be less than 1000 characters long';
-      return false;
-    }
-    messageError = '';
-    return true;
-  }
+	function validateName(): boolean {
+		if (name.length == 0) {
+			nameError = 'Name is required';
+			return false;
+		}
+		if (name.length < 3) {
+			nameError = 'Name must be at least 3 characters long';
+			return false;
+		}
+		if (name.length > 100) {
+			nameError = 'Name must be less than 100 characters long';
+			return false;
+		}
+		nameError = '';
+		return true;
+	}
+	function validateEmail(): boolean {
+		if (email.length == 0) {
+			emailError = 'Email is required';
+			return false;
+		}
+		if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+			emailError = 'Invalid email';
+			return false;
+		}
+		emailError = '';
+		return true;
+	}
+	function validateMessage(): boolean {
+		if (message.length == 0) {
+			messageError = 'Message is required';
+			return false;
+		}
+		if (message.length < 3) {
+			messageError = 'Message must be at least 3 characters long';
+			return false;
+		}
+		if (message.length > 1000) {
+			messageError = 'Message must be less than 1000 characters long';
+			return false;
+		}
+		messageError = '';
+		return true;
+	}
 	function handleSubmit(event: Event) {
 		event.preventDefault();
 
-    if (!validateName() || !validateEmail() || !validateMessage()) {
-      addToast({
-        data: {
-          title: 'Invalid form',
-          description: 'Please check your inputs',
-          color: 'bg-red-500'
-        }
-      });
-      return;
-    }
+		if (!validateName() || !validateEmail() || !validateMessage()) {
+			addToast({
+				data: {
+					title: 'Invalid form',
+					description: 'Please check your inputs',
+					color: 'bg-red-500'
+				}
+			});
+			return;
+		}
 
 		issueTicket(name, email, message).then((ticket) => {
 			if (!ticket) {
@@ -97,7 +97,7 @@
 					color: 'bg-green-500'
 				}
 			});
-			const id = ticket.id;
+			const id = ticket.uuid;
 			goto(`/?ticket=${id}`);
 			successCallback(ticket);
 		});
@@ -118,15 +118,18 @@
 		</label>
 		<input
 			bind:value={name}
-      on:blur={validateName}
-			class="h-10 flex-grow rounded-md border border-neutral-200 p-2 focus:ring-2 focus:ring-orange-500 focus:outline-none {nameError != '' ? 'ring-2 ring-red-500' : ''}"
+			on:blur={validateName}
+			class="h-10 flex-grow rounded-md border border-neutral-200 p-2 focus:ring-2 focus:ring-orange-500 focus:outline-none {nameError !=
+			''
+				? 'ring-2 ring-red-500'
+				: ''}"
 			type="text"
 			id="name"
 			placeholder="John Doe"
 		/>
-    {#if nameError}
-      <p class="text-xs text-red-500">{nameError}</p>
-    {/if}
+		{#if nameError}
+			<p class="text-xs text-red-500">{nameError}</p>
+		{/if}
 		<label
 			use:melt={$root}
 			class="my-4 flex text-md font-semibold leading-none text-orange-500"
@@ -138,18 +141,21 @@
 		</label>
 		<input
 			bind:value={email}
-      on:blur={validateEmail}
-			class="h-10 flex-grow rounded-md border border-neutral-200 p-2 focus:ring-2 focus:ring-orange-500 focus:outline-none {emailError != '' ? 'ring-2 ring-red-500' : ''}"
+			on:blur={validateEmail}
+			class="h-10 flex-grow rounded-md border border-neutral-200 p-2 focus:ring-2 focus:ring-orange-500 focus:outline-none {emailError !=
+			''
+				? 'ring-2 ring-red-500'
+				: ''}"
 			type="email"
 			id="email"
 			placeholder="example@mail.com"
 		/>
-    {#if emailError}
-      <p class="text-xs text-red-500">{emailError}</p>
-    {/if}
+		{#if emailError}
+			<p class="text-xs text-red-500">{emailError}</p>
+		{/if}
 		<label
 			use:melt={$root}
-			class="my-4 flex justify-start  text-md font-semibold leading-none text-orange-500"
+			class="my-4 flex justify-start text-md font-semibold leading-none text-orange-500"
 			for="email"
 			data-melt-part="root"
 		>
@@ -158,19 +164,28 @@
 			<Tooltip>
 				<p>Describe your needs here</p>
 			</Tooltip>
-      <span class="ms-auto text-xs text-neutral-400 {messageCharactersLeft != 1000 && messageCharactersLeft > 997 || messageCharactersLeft < 0 ? 'text-orange-400' : ''}">{messageCharactersLeft}</span>
+			<span
+				class="ms-auto text-xs text-neutral-400 {(messageCharactersLeft != 1000 &&
+					messageCharactersLeft > 997) ||
+				messageCharactersLeft < 0
+					? 'text-orange-400'
+					: ''}">{messageCharactersLeft}</span
+			>
 		</label>
-    <textarea
-      bind:value={message}
-      on:blur={validateMessage}
-      on:input={() => messageCharactersLeft = 1000 - message.length}
-      class="h-20 flex-grow rounded-md border resize-none border-neutral-200 p-2 focus:ring-2 focus:ring-orange-500 focus:outline-none {messageError != '' ? 'ring-2 ring-red-500' : ''}"
-      id="message"
-      placeholder="I need help on a project I'm working on"
-    />
-    {#if messageError}
-      <p class="text-xs text-red-500">{messageError}</p>
-    {/if}
+		<textarea
+			bind:value={message}
+			on:blur={validateMessage}
+			on:input={() => (messageCharactersLeft = 1000 - message.length)}
+			class="h-20 flex-grow rounded-md border resize-none border-neutral-200 p-2 focus:ring-2 focus:ring-orange-500 focus:outline-none {messageError !=
+			''
+				? 'ring-2 ring-red-500'
+				: ''}"
+			id="message"
+			placeholder="I need help on a project I'm working on"
+		/>
+		{#if messageError}
+			<p class="text-xs text-red-500">{messageError}</p>
+		{/if}
 		<button
 			class="my-4 self-end rounded-md bg-orange-500 px-4 py-2 font-medium text-orange-100 shadow-lg hover:opacity-75 active:opacity-50"
 			data-umami-event="New ticket"

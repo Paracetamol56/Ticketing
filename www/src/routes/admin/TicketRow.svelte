@@ -14,7 +14,13 @@
 
 	const handleSave = async (notify: boolean) => {
 		let token = window.sessionStorage.getItem('token');
-		let result: TicketModel | null = await updateTicket(token!, ticket.id, new_status, new_note, notify);
+		let result: TicketModel | null = await updateTicket(
+			token!,
+			ticket.id,
+			new_status,
+			new_note,
+			notify
+		);
 		if (!result) {
 			addToast({
 				data: {
@@ -84,10 +90,10 @@
 	</div>
 	<div class="flex-grow flex flex-col">
 		<div class="flex items-center gap-2">
-			<p class="truncate"><strong>ID:</strong> {ticket.id}</p>
+			<p class="truncate"><strong>ID:</strong> {ticket.uuid}</p>
 			<a
 				class="text-neutral-400 transition-colors hover:text-neutral-600"
-				href={`/?ticket=${ticket.id}`}
+				href={`/?ticket=${ticket.uuid}`}
 				target="_blank"
 				rel="noopener noreferrer"
 			>
@@ -178,7 +184,7 @@
 			>
 				Cancel
 			</button>
-			<Dialog saveCallback={handleSave}/>
+			<Dialog saveCallback={handleSave} />
 		</div>
 	</div>
 </div>

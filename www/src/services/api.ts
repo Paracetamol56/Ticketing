@@ -24,12 +24,11 @@ async function getTicket(id: string): Promise<TicketModel | null> {
 }
 
 interface TicketPage {
-  tickets: TicketModel[];
-  count: number;
-  max_page: number;
+  items: TicketModel[];
   page: number;
   limit: number;
-  status: string | null;
+  total_items: number;
+  total_pages: number;
 }
 
 async function getTicketPage(token: string, page: number): Promise<TicketPage | null> {
