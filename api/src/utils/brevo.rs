@@ -50,7 +50,7 @@ pub async fn send_email(
         .await?;
 
     println!("[brevo] Response status: {}", response.status());
-    println!("[brevo] Response text: {:?}", response.text().await);
+    println!("[brevo] Response body: {:?}", response.text().await);
 
     Ok(())
 }
