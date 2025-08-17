@@ -20,7 +20,6 @@ pub async fn send_email(
     let sender_name: String = std::env::var("SENDER_NAME").expect("SENDER_NAME must be set");
 
     println!("[brevo] Sending email to {}", recipient.email);
-    println!("[brevo] API key: {}", api_key);
     println!("[brevo] From: {} <{}>", sender_name, sender_email);
     println!("[brevo] Subject: {}", subject);
 
@@ -50,20 +49,8 @@ pub async fn send_email(
         .send()
         .await?;
 
-    match response.status() {
-        StatusCode::OK | StatusCode::CREATED | StatusCode::ACCEPTED => {
-            println!("Email sent to {} (Brevo)", recipient.email);
-        }
-        _ => {
-            let status = response.status();
-            let text = response.text().await.unwrap_or_else(|_| "<no body>".to_string());
-            eprintln!(
-                "Unable to send your email. Status code: {}. Response: {}",
-                status,
-                text
-            );
-        }
-    }
+    println!("[brevo] Response status: {}", response.status());
+    println!("[brevo] Response text: {:?}", response.text().await);
 
     Ok(())
 }

@@ -16,7 +16,7 @@
 		let token = window.sessionStorage.getItem('token');
 		let result: TicketModel | null = await updateTicket(
 			token!,
-			ticket.id,
+			ticket.uuid,
 			new_status,
 			new_note,
 			notify

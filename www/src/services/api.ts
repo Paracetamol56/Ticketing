@@ -13,9 +13,9 @@ async function checkStatus(): Promise<boolean> {
   }
 }
 
-async function getTicket(id: string): Promise<TicketModel | null> {
+async function getTicket(uuid: string): Promise<TicketModel | null> {
   try {
-    const response = await axios.get(`${API_URL}/tickets/${id}`);
+    const response = await axios.get(`${API_URL}/tickets/${uuid}`);
     return response.data as TicketModel;
   } catch (error) {
     console.error(error);
@@ -45,9 +45,9 @@ async function getTicketPage(token: string, page: number): Promise<TicketPage | 
   }
 }
 
-async function updateTicket(token: string, id: string, status: string, note: string | null, notify: boolean): Promise<TicketModel | null> {
+async function updateTicket(token: string, uuid: string, status: string, note: string | null, notify: boolean): Promise<TicketModel | null> {
   try {
-    const response = await axios.patch(`${API_URL}/tickets/${id}`, {
+    const response = await axios.patch(`${API_URL}/tickets/${uuid}`, {
       status,
       note,
       notify,

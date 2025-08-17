@@ -50,13 +50,14 @@ async fn main() -> std::io::Result<()> {
         Err(e) => log::error!("Failed to initialize database: {}", e),
     }
 
-    let address = "0.0.0.0";
+    let address = "127.0.0.1";
 
     log::info!("starting HTTP server at http://{}:8080", address);
 
     HttpServer::new(move || {
         let cors = Cors::default()
-            .allowed_origin("https://ticket.matheo-galuba.com")
+            // .allowed_origin("https://ticket.matheo-galuba.com")
+            .allow_any_origin()
             .allowed_methods(vec!["GET", "POST", "PATCH", "DELETE", "OPTIONS"])
             .allowed_headers(vec![http::header::CONTENT_TYPE, http::header::AUTHORIZATION])
             .supports_credentials()
