@@ -1,4 +1,4 @@
-use reqwest::{header, Client, StatusCode};
+use reqwest::{header, Client};
 use serde::Serialize;
 use serde_json::json;
 
@@ -46,13 +46,24 @@ pub async fn send_email(
         .header("api-key", api_key)
         .header(header::CONTENT_TYPE, header::HeaderValue::from_static("application/json"))
         .json(&request_body)
-        .send()
-        .await?;
+        .send();
 
-    println!("[brevo] Response status: {}", response.status());
-    println!("[brevo] Response body: {:?}", response.text().await);
-
-    Ok(())
+    match response.await {
+        Ok(resp) => {
+            if !resp.status().is_success() {
+                let status = resp.status();
+                let text = resp.text().await.unwrap_or_else(|_| "<failed to read body>".into());
+                eprintln!("[brevo] Error response: {} - {}", status, text);
+            } else {
+                println!("[brevo] Email sent successfully!");
+            }
+            Ok(())
+        }
+        Err(err) => {
+            eprintln!("[brevo] Request failed: {}", err);
+            Err(err)
+        }
+    }
 }
 
 pub async fn send_ticket(ticket: &Ticket) -> Result<(), reqwest::Error> {
