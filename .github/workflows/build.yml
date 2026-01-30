@@ -1,17 +1,18 @@
-
-name: Deploy SvelteKit Frontend (WWW)
+name: Build and Deploy Full-Stack Application
 
 on:
   push:
     branches:
       - master
     paths:
+      - "server/**"
       - "www/**"
-      - ".github/workflows/deploy-www.yml"
+      - "Dockerfile"
+      - ".github/workflows/deploy.yml"
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}-www
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -37,11 +38,15 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: www
+          context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
