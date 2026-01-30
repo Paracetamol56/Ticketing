@@ -1,19 +1,15 @@
 <script lang="ts">
-	import { Heart } from 'lucide-svelte';
-	import Toast from '../components/Toast.svelte';
 	import Ticket from './Ticket.svelte';
 	import Accordion from './Accordion.svelte';
-	import { checkStatus, getTicket } from '../services/api';
+	import { getTicket } from '$lib/services/api';
 	import { onMount } from 'svelte';
-	import { createToaster } from '@melt-ui/svelte';
-	import { flip } from 'svelte/animate';
 	import TicketForm from './TicketForm.svelte';
-	import type TicketModel from '../models/ticket';
+	import type TicketModel from '$lib/models/ticket';
 	import TicketDisplay from './TicketDisplay.svelte';
 	import { addToast } from './+layout.svelte';
 
 	// make this data reactive
-	let currentTicket: TicketModel|null = null;
+	let currentTicket: TicketModel | null = null;
 	const updateTicket = (ticket: TicketModel) => {
 		currentTicket = ticket;
 	};

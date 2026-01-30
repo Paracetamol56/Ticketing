@@ -46,7 +46,7 @@
 		<div
 			class="h-full w-full bg-orange-500"
 			style={`transform: translateX(-${100 - (100 * ($percentage ?? 0)) / ($max ?? 1)}%)`}
-		/>
+		></div>
 	</div>
 
 	<div

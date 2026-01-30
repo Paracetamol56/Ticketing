@@ -1,15 +1,25 @@
+<script lang="ts" context="module">
+	const {
+		elements,
+		helpers: { addToast },
+		states: { toasts },
+		actions: { portal }
+	} = createToaster<ToastData>();
+
+	export { addToast };
+</script>
+
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { createPopover, createToaster, melt } from '@melt-ui/svelte';
-	import { checkStatus } from '../services/api';
+	import { checkStatus } from '$lib/services/api';
 	import { Github, Heart, Info, X } from 'lucide-svelte';
 	import type { ToastData } from '$lib';
 	import { flip } from 'svelte/animate';
-	import Toast from '../components/Toast.svelte';
-  
+
 	import '../app.css';
 	import { fade } from 'svelte/transition';
-	import Ticket from './Ticket.svelte';
+	import Toast from '$lib/components/Toast.svelte';
 
 	onMount(async () => {
 		checkStatus().then((status) => {
@@ -25,31 +35,31 @@
 		});
 	});
 
-  const {
-    elements: { trigger, content, arrow, close },
-    states: { open },
-  } = createPopover({
-    forceVisible: true,
-  });
-</script>
-
-<script lang="ts" context="module">
-  const {
-		elements,
-		helpers: { addToast },
-		states: { toasts },
-		actions: { portal }
-	} = createToaster<ToastData>();
-
-  export { addToast };
+	const {
+		elements: { trigger, content, arrow, close },
+		states: { open }
+	} = createPopover({
+		forceVisible: true
+	});
 </script>
 
 <!-- Head -->
 <svelte:head>
 	<title>Ticketing - Mathéo Galuba</title>
 	<meta name="description" content="Ticketing app to get in touch with me" />
-	<script data-host="https://cdn.micrometrics.es" data-dnt="false" src="https://cdn.micrometrics.es/js/script.js" id="ZwSg9rf6GA" async defer></script>
-  <script async src="https://analytics.matheo-galuba.com/script.js" data-website-id="08c04e20-f699-4aae-9be5-79172f75569e"></script>
+	<script
+		data-host="https://cdn.micrometrics.es"
+		data-dnt="false"
+		src="https://cdn.micrometrics.es/js/script.js"
+		id="ZwSg9rf6GA"
+		async
+		defer
+	></script>
+	<script
+		async
+		src="https://analytics.matheo-galuba.com/script.js"
+		data-website-id="08c04e20-f699-4aae-9be5-79172f75569e"
+	></script>
 </svelte:head>
 
 <!-- Toast list -->
@@ -66,9 +76,11 @@
 
 <slot />
 
-<footer class="relative w-full py-4  text-white">
-	<div class="absolute top-0 bottom-0 left-1/2 transform -translate-x-1/2
-   flex flex-wrap items-center justify-center gap-1">
+<footer class="relative w-full py-4 text-white">
+	<div
+		class="absolute top-0 bottom-0 left-1/2 transform -translate-x-1/2
+   flex flex-wrap items-center justify-center gap-1"
+	>
 		<p>App made with</p>
 		<Heart class="text-orange-500" size="16" />
 		<p>
@@ -76,53 +88,53 @@
 				>Matheo Galuba</a
 			>
 		</p>
-  </div>
+	</div>
 
-  <div class="absultue top-0 bottom-0 right-0 mx-4 flex items-center justify-end gap-2">
-    <a href="https://github.com/Paracetamol56/Ticketing" target="_blank">
-      <Github class="square-8" />
-    </a>
-    <button
-      type="button"
-      class="shadow-lg"
-      use:melt={$trigger}
-      aria-label="Info"
-    >
-      <Info class="square-8" />
-    </button>
-    {#if $open}
-      <div use:melt={$content} transition:fade={{ duration: 100 }} class="z-10 w-60 rounded-md bg-white p-5 shadow-sm">
-        <div use:melt={$arrow} />
-        <div class="flex flex-col gap-2.5">
-          <p><strong>Backend</strong></p>
-          <ul>
-            <li><a class="underline text-orange-500" href="https://www.rust-lang.org">Rust</a></li>
-            <li><a class="underline text-orange-500" href="https://tokio.rs">Tokio</a></li>
-            <li><a class="underline text-orange-500" href="https://github.com/tokio-rs/axum">Axum</a></li>
-          </ul>
-          <p><strong>Frontend</strong></p>
-          <ul>
-            <li><a class="underline text-orange-500" href="https://www.svelte.dev">Svelte</a></li>
-            <li><a class="underline text-orange-500" href="https://www.tailwindcss.com">TailwindCSS</a></li>
-            <li><a class="underline text-orange-500" href="https://www.melt-ui.com">MeltUI</a></li>
-            <li><a class="underline text-orange-500" href="https://lucide.dev">Lucide</a></li>
-          </ul>
-          <p><strong>Hosting</strong></p>
-          <ul>
-            <li><a class="underline text-orange-500" href="https://www.netlify.com">Netlify</a></li>
-            <li><a class="underline text-orange-500" href="https://www.shuttle.rs">Shuttle.rs</a></li>
-          </ul>
-        </div>
-        <button
-          class="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full
+	<div class="absultue top-0 bottom-0 right-0 mx-4 flex items-center justify-end gap-2">
+		<a href="https://github.com/Paracetamol56/Ticketing" target="_blank">
+			<Github class="square-8" />
+		</a>
+		<button type="button" class="shadow-lg" use:melt={$trigger} aria-label="Info">
+			<Info class="square-8" />
+		</button>
+		{#if $open}
+			<div
+				use:melt={$content}
+				transition:fade={{ duration: 100 }}
+				class="z-10 w-60 rounded-md bg-white p-5 shadow-sm"
+			>
+				<div use:melt={$arrow} />
+				<div class="flex flex-col gap-2.5">
+					<p><strong>Backend</strong></p>
+					<ul>
+						<li><a class="underline text-orange-500" href="https://www.rust-lang.org">Rust</a></li>
+						<li><a class="underline text-orange-500" href="https://www.actix.rs">Actix Web</a></li>
+					</ul>
+					<p><strong>Frontend</strong></p>
+					<ul>
+						<li><a class="underline text-orange-500" href="https://www.svelte.dev">Svelte</a></li>
+						<li>
+							<a class="underline text-orange-500" href="https://www.tailwindcss.com">TailwindCSS</a
+							>
+						</li>
+						<li><a class="underline text-orange-500" href="https://www.melt-ui.com">MeltUI</a></li>
+						<li><a class="underline text-orange-500" href="https://lucide.dev">Lucide</a></li>
+					</ul>
+					<p><strong>Hosting</strong></p>
+					<ul>
+						<li>Self-hosted on a potato server</li>
+					</ul>
+				</div>
+				<button
+					class="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full
             text-orange-800 transition-colors hover:bg-orange-500/10
             focus-visible:ring focus-visible:ring-orange-400 focus-visible:ring-offset-2
             bg-white p-0 text-sm font-medium"
-          use:melt={$close}
-        >
-          <X class="square-4" />
-        </button>
-      </div>
-    {/if}
-  </div>
+					use:melt={$close}
+				>
+					<X class="square-4" />
+				</button>
+			</div>
+		{/if}
+	</div>
 </footer>

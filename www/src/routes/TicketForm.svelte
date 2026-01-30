@@ -2,10 +2,10 @@
 	import { createLabel, melt } from '@melt-ui/svelte';
 	import { AtSign, MessageSquare, User } from 'lucide-svelte';
 	import Tooltip from './Tooltip.svelte';
-	import { issueTicket } from '../services/api';
+	import { issueTicket } from '$lib/services/api';
 	import { goto } from '$app/navigation';
 	import { addToast } from './+layout.svelte';
-	import type TicketModel from '../models/ticket';
+	import type TicketModel from '$lib/models/ticket';
 
 	const {
 		elements: { root }

@@ -13,10 +13,7 @@
 	export { items };
 </script>
 
-<div
-	class="z-10 w-[300px] max-w-full rounded-xl bg-white shadow-lg sm:w-[25rem]"
-	{...$root}
->
+<div class="z-10 w-[300px] max-w-full rounded-xl bg-white shadow-lg sm:w-[25rem]" {...$root}>
 	{#each items as { id, title, description }, i}
 		<div
 			use:melt={$item(id)}
