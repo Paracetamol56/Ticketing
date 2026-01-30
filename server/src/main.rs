@@ -59,8 +59,11 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::new(
                 "%a %t \"%r\" %s %b \"%{referer}i\" \"%{user-agent}i\" %t",
             ))
-            .configure(status::routes::configure)
-            .configure(tickets::routes::configure)
+            .service(
+                web::scope("/api")
+                    .configure(status::routes::configure)
+                    .configure(tickets::routes::configure),
+            )
             .service(
                 Files::new("/", &static_dir)
                     .use_last_modified(true)

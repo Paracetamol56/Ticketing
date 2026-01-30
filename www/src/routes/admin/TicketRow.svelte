@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type TicketModel from '../../models/ticket';
+	import type TicketModel from '$lib/models/ticket';
 	import { ArrowUpRight, CheckCircle2, Circle, CircleDot, CircleDotDashed } from 'lucide-svelte';
 	import { createSelect, melt, type CreateSelectProps, createDialog } from '@melt-ui/svelte';
 	import { Check, ChevronDown } from 'lucide-svelte';
-	import { updateTicket } from '../../services/api';
+	import { updateTicket } from '$lib/services/api';
 	import { addToast } from '../+layout.svelte';
 	import Dialog from './Dialog.svelte';
 

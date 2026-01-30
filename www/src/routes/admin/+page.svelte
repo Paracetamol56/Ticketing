@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import '../../app.css';
-	import type TicketModel from '../../models/ticket';
-	import { getTicketPage } from '../../services/api';
+	import type TicketModel from '$lib/models/ticket';
+	import { getTicketPage } from '$lib/services/api';
 	import TokenForm from './TokenForm.svelte';
 	import TicketRow from './TicketRow.svelte';
 	import { addToast } from '../+layout.svelte';
