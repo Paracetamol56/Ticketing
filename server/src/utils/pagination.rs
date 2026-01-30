@@ -37,12 +37,12 @@ pub struct PaginatedResponse<T> {
     pub items: Vec<T>,
     pub page: u32,
     pub limit: u32,
-    pub total_items: u64,
+    pub total_items: u32,
     pub total_pages: u32,
 }
 
 impl<T> PaginatedResponse<T> {
-    pub fn new(items: Vec<T>, page: u32, limit: u32, total_items: u64) -> Self {
+    pub fn new(items: Vec<T>, page: u32, limit: u32, total_items: u32) -> Self {
         let total_pages = ((total_items as f64) / (limit as f64)).ceil() as u32;
         Self {
             items,

@@ -1,30 +1,23 @@
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse, Responder, ResponseError};
 use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::tickets::repository as tickets_repo;
-use crate::utils::brevo::{send_notification, send_ticket};
+use super::service::{self, CreateTicketRequest, UpdateTicketRequest};
 use crate::utils::db::Connection;
-use crate::utils::pagination::{PaginatedResponse, PaginationQuery};
+use crate::utils::pagination::PaginationQuery;
 use crate::Pool;
 
 pub async fn get_all(db: web::Data<Pool>, query: web::Query<PaginationQuery>) -> impl Responder {
     let conn: Connection = db.get().expect("Failed to get DB connection");
     let query = query.into_inner();
+
     if let Err(e) = query.validate() {
         return HttpResponse::BadRequest().body(format!("Invalid pagination parameters: {}", e));
     }
 
-    match tickets_repo::get_all(&conn, query.page(), query.limit()) {
-        Ok(tickets) => HttpResponse::Ok().json(PaginatedResponse::new(
-            tickets,
-            query.page(),
-            query.limit(),
-            tickets_repo::get_count(&conn).unwrap_or(0) as u64,
-        )),
-        Err(e) => {
-            HttpResponse::InternalServerError().body(format!("Error fetching tickets: {}", e))
-        }
+    match service::get_all_tickets(&conn, query.page(), query.limit()) {
+        Ok(response) => HttpResponse::Ok().json(response),
+        Err(e) => e.error_response(),
     }
 }
 
@@ -32,40 +25,25 @@ pub async fn get_by_id(db: web::Data<Pool>, path: web::Path<Uuid>) -> impl Respo
     let id = path.into_inner();
     let conn: Connection = db.get().expect("Failed to get DB connection");
 
-    match tickets_repo::get_by_id(&conn, id) {
+    match service::get_ticket_by_id(&conn, id) {
         Ok(ticket) => HttpResponse::Ok().json(ticket),
-        Err(rusqlite::Error::QueryReturnedNoRows) => HttpResponse::NotFound().finish(),
-        Err(e) => HttpResponse::InternalServerError().body(format!("Error fetching ticket: {}", e)),
+        Err(e) => e.error_response(),
     }
 }
 
 pub async fn get_stats(db: web::Data<Pool>) -> impl Responder {
     let conn: Connection = db.get().expect("Failed to get DB connection");
 
-    let open_tickets = tickets_repo::get_count_by_status(&conn, "open").unwrap_or(0);
-    let pending_tickets = tickets_repo::get_count_by_status(&conn, "pending").unwrap_or(0);
-    let closed_tickets = tickets_repo::get_count_by_status(&conn, "closed").unwrap_or(0);
-    let total_tickets = open_tickets + pending_tickets + closed_tickets;
-    let last_ticket = tickets_repo::get_last(&conn);
-
-    let last_at = match last_ticket {
-        Ok(ticket) => Some(ticket.created_at),
-        Err(rusqlite::Error::QueryReturnedNoRows) => None,
-        Err(e) => {
-            return HttpResponse::InternalServerError()
-                .body(format!("Error fetching last ticket: {}", e));
-        }
-    };
-
-    let res = serde_json::json!({
-        "open": open_tickets,
-        "pending": pending_tickets,
-        "closed": closed_tickets,
-        "total": total_tickets,
-        "last_at": last_at,
-    });
-
-    HttpResponse::Ok().json(res)
+    match service::get_ticket_stats(&conn) {
+        Ok(stats) => HttpResponse::Ok().json(serde_json::json!({
+            "open": stats.open,
+            "pending": stats.pending,
+            "closed": stats.closed,
+            "total": stats.total,
+            "last_at": stats.last_at,
+        })),
+        Err(e) => e.error_response(),
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -79,33 +57,15 @@ pub async fn post_ticket(db: web::Data<Pool>, body: web::Json<PostTicket>) -> im
     let body = body.into_inner();
     let conn: Connection = db.get().expect("Failed to get DB connection");
 
-    let max_number = match tickets_repo::get_max_number(&conn) {
-        Ok(number) => number.unwrap_or(0),
-        Err(e) => {
-            return HttpResponse::InternalServerError()
-                .body(format!("Error fetching max ticket number: {}", e))
-        }
+    let req = CreateTicketRequest {
+        name: body.name,
+        email: body.email,
+        message: body.message,
     };
 
-    let ticket = crate::tickets::models::Ticket {
-        uuid: Uuid::new_v4(),
-        number: max_number as u32 + 1,
-        name: body.name.clone(),
-        email: body.email.clone(),
-        message: body.message.clone(),
-        note: None,
-        status: "open".to_string(),
-        created_at: chrono::Utc::now(),
-        updated_at: None,
-        closed_at: None,
-    };
-
-    match tickets_repo::create(&conn, &ticket) {
-        Ok(()) => {
-            let _ = send_ticket(&ticket).await;
-            HttpResponse::Created().json(&ticket)
-        }
-        Err(e) => HttpResponse::InternalServerError().body(format!("Error creating ticket: {}", e)),
+    match service::create_ticket(&conn, req).await {
+        Ok(ticket) => HttpResponse::Created().json(ticket),
+        Err(e) => e.error_response(),
     }
 }
 
@@ -125,29 +85,15 @@ pub async fn patch_ticket(
     let body = body.into_inner();
     let conn: Connection = db.get().expect("Failed to get DB connection");
 
-    // Fetch the existing ticket
-    let mut ticket = match tickets_repo::get_by_id(&conn, id) {
-        Ok(ticket) => ticket,
-        Err(rusqlite::Error::QueryReturnedNoRows) => return HttpResponse::NotFound().finish(),
-        Err(e) => {
-            return HttpResponse::InternalServerError()
-                .body(format!("Error fetching ticket: {}", e))
-        }
+    let req = UpdateTicketRequest {
+        note: body.note,
+        status: body.status,
+        notify: body.notify,
     };
 
-    ticket.note = body.note.or(ticket.note);
-    ticket.status = body.status.unwrap_or(ticket.status);
-    ticket.updated_at = Some(chrono::Utc::now());
-
-    match tickets_repo::update(&conn, &id, &ticket) {
-        Ok(()) => {
-            if body.notify {
-                let _ = send_notification(&ticket).await;
-            }
-            HttpResponse::NoContent().finish()
-        }
-        Err(rusqlite::Error::QueryReturnedNoRows) => HttpResponse::NotFound().finish(),
-        Err(e) => HttpResponse::InternalServerError().body(format!("Error updating ticket: {}", e)),
+    match service::update_ticket(&conn, id, req).await {
+        Ok(ticket) => HttpResponse::Ok().json(ticket),
+        Err(e) => e.error_response(),
     }
 }
 
@@ -155,9 +101,8 @@ pub async fn delete_ticket(db: web::Data<Pool>, path: web::Path<Uuid>) -> impl R
     let id = path.into_inner();
     let conn: Connection = db.get().expect("Failed to get DB connection");
 
-    match tickets_repo::delete(&conn, &id) {
-        Ok(_) => HttpResponse::NoContent().finish(),
-        Err(rusqlite::Error::QueryReturnedNoRows) => HttpResponse::NotFound().finish(),
-        Err(e) => HttpResponse::InternalServerError().body(format!("Error deleting ticket: {}", e)),
+    match service::delete_ticket(&conn, id) {
+        Ok(()) => HttpResponse::NoContent().finish(),
+        Err(e) => e.error_response(),
     }
 }
