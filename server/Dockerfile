@@ -7,7 +7,7 @@ COPY . .
 RUN cargo build --release
 
 FROM debian:bullseye
-RUN apt-get update && apt-get install -y libsqlite3-0
+RUN apt-get update && apt-get install -y libsqlite3-0 ca-certificates
 COPY --from=builder /app/target/release/ticketing-api /usr/src/ticketing-api
 EXPOSE 8080
 CMD ["/usr/src/ticketing-api"]
