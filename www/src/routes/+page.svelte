@@ -53,10 +53,9 @@
 			<h1 class="my-4 text-5xl md:text-6xl font-bold text-center">Welcome to my ticketing app</h1>
 			<div class="mx-auto">
 				<p class="my-4 text-lg text-center">
-					My favorite things in life don't cost any money.<br />It's really clear that the most
-					precious resource we all have is time.
+					"All we have to decide is what to do with the time that is given us."
 				</p>
-				<p class="text-orange-500 opacity-75 text-md text-right">- Steve Jobs</p>
+				<p class="text-orange-500 opacity-75 text-md text-right">- J.R.R Tolkien</p>
 			</div>
 		</div>
 	</div>
