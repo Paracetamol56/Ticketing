@@ -1,17 +1,10 @@
 use super::{repository, ServiceError};
+use crate::tickets::dto;
 use crate::tickets::models::Ticket;
-use crate::utils::brevo::{send_notification, send_ticket};
+use crate::utils::brevo::{send_admin_notification, send_notification, send_ticket};
 use crate::utils::db::Connection;
 use crate::utils::pagination::PaginatedResponse;
 use uuid::Uuid;
-
-pub struct TicketStats {
-    pub open: i64,
-    pub pending: i64,
-    pub closed: i64,
-    pub total: i64,
-    pub last_at: Option<chrono::DateTime<chrono::Utc>>,
-}
 
 pub fn get_all_tickets(
     conn: &Connection,
@@ -28,7 +21,7 @@ pub fn get_ticket_by_id(conn: &Connection, id: Uuid) -> Result<Ticket, ServiceEr
     repository::get_by_id(conn, id).map_err(ServiceError::from)
 }
 
-pub fn get_ticket_stats(conn: &Connection) -> Result<TicketStats, ServiceError> {
+pub fn get_ticket_stats(conn: &Connection) -> Result<dto::TicketStatsResponse, ServiceError> {
     let open = repository::get_count_by_status(conn, "open").unwrap_or(0);
     let pending = repository::get_count_by_status(conn, "pending").unwrap_or(0);
     let closed = repository::get_count_by_status(conn, "closed").unwrap_or(0);
@@ -40,7 +33,7 @@ pub fn get_ticket_stats(conn: &Connection) -> Result<TicketStats, ServiceError> 
         Err(e) => return Err(ServiceError::Database(e)),
     };
 
-    Ok(TicketStats {
+    Ok(dto::TicketStatsResponse {
         open,
         pending,
         closed,
@@ -49,15 +42,9 @@ pub fn get_ticket_stats(conn: &Connection) -> Result<TicketStats, ServiceError> 
     })
 }
 
-pub struct CreateTicketRequest {
-    pub name: String,
-    pub email: String,
-    pub message: String,
-}
-
 pub async fn create_ticket(
     conn: &Connection,
-    req: CreateTicketRequest,
+    req: dto::PostTicketRequest,
 ) -> Result<Ticket, ServiceError> {
     let max_number = repository::get_max_number(conn)?.unwrap_or(0);
 
@@ -79,19 +66,18 @@ pub async fn create_ticket(
     // Send email notification (non-blocking, ignore errors)
     let _ = send_ticket(&ticket).await;
 
-    Ok(ticket)
-}
+    // Send admin email notification (non-blocking, ignore errors)
+    if let Ok(stats) = get_ticket_stats(conn) {
+        let _ = send_admin_notification(&ticket, &stats).await;
+    }
 
-pub struct UpdateTicketRequest {
-    pub note: Option<String>,
-    pub status: Option<String>,
-    pub notify: bool,
+    Ok(ticket)
 }
 
 pub async fn update_ticket(
     conn: &Connection,
     id: Uuid,
-    req: UpdateTicketRequest,
+    req: dto::PatchTicketRequest,
 ) -> Result<Ticket, ServiceError> {
     let mut ticket = repository::get_by_id(conn, id)?;
 

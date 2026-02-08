@@ -1,5 +1,6 @@
 use actix_web::HttpResponse;
 
+pub mod dto;
 pub mod handlers;
 pub mod models;
 mod repository;

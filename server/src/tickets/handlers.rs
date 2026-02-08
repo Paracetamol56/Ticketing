@@ -1,8 +1,8 @@
 use actix_web::{web, HttpResponse, Responder, ResponseError};
-use serde::Deserialize;
 use uuid::Uuid;
 
-use super::service::{self, CreateTicketRequest, UpdateTicketRequest};
+use super::service;
+use crate::tickets::dto;
 use crate::utils::db::Connection;
 use crate::utils::pagination::PaginationQuery;
 use crate::Pool;
@@ -46,52 +46,29 @@ pub async fn get_stats(db: web::Data<Pool>) -> impl Responder {
     }
 }
 
-#[derive(Debug, Deserialize)]
-pub struct PostTicket {
-    name: String,
-    email: String,
-    message: String,
-}
-
-pub async fn post_ticket(db: web::Data<Pool>, body: web::Json<PostTicket>) -> impl Responder {
+pub async fn post_ticket(
+    db: web::Data<Pool>,
+    body: web::Json<dto::PostTicketRequest>,
+) -> impl Responder {
     let body = body.into_inner();
     let conn: Connection = db.get().expect("Failed to get DB connection");
 
-    let req = CreateTicketRequest {
-        name: body.name,
-        email: body.email,
-        message: body.message,
-    };
-
-    match service::create_ticket(&conn, req).await {
+    match service::create_ticket(&conn, body).await {
         Ok(ticket) => HttpResponse::Created().json(ticket),
         Err(e) => e.error_response(),
     }
 }
 
-#[derive(Debug, Deserialize)]
-pub struct PatchTicket {
-    pub note: Option<String>,
-    pub status: Option<String>,
-    pub notify: bool,
-}
-
 pub async fn patch_ticket(
     db: web::Data<Pool>,
     path: web::Path<Uuid>,
-    body: web::Json<PatchTicket>,
+    body: web::Json<dto::PatchTicketRequest>,
 ) -> impl Responder {
     let id = path.into_inner();
     let body = body.into_inner();
     let conn: Connection = db.get().expect("Failed to get DB connection");
 
-    let req = UpdateTicketRequest {
-        note: body.note,
-        status: body.status,
-        notify: body.notify,
-    };
-
-    match service::update_ticket(&conn, id, req).await {
+    match service::update_ticket(&conn, id, body).await {
         Ok(ticket) => HttpResponse::Ok().json(ticket),
         Err(e) => e.error_response(),
     }

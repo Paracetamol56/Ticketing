@@ -2,6 +2,7 @@ use reqwest::{header, Client};
 use serde::Serialize;
 use serde_json::json;
 
+use crate::tickets::dto;
 use crate::tickets::models::Ticket;
 
 #[derive(Debug, Serialize)]
@@ -68,6 +69,7 @@ pub async fn send_email(recipient: &User, subject: &str, body: &str) -> Result<(
 }
 
 pub async fn send_ticket(ticket: &Ticket) -> Result<(), reqwest::Error> {
+    let base_url: String = std::env::var("BASE_URL").expect("BASE_URL must be set");
     let mut body: String = include_str!("../../ticket_template.html").to_owned();
     body = body
         .replace("{{name}}", &ticket.name)
@@ -75,7 +77,7 @@ pub async fn send_ticket(ticket: &Ticket) -> Result<(), reqwest::Error> {
         .replace("{{number}}", &ticket.number.to_string())
         .replace(
             "{{link}}",
-            format!("https://ticket.matheo-galuba.com/?ticket={}", ticket.uuid).as_str(),
+            format!("{}/?ticket={}", base_url, ticket.uuid).as_str(),
         );
     send_email(
         &User {
@@ -89,6 +91,7 @@ pub async fn send_ticket(ticket: &Ticket) -> Result<(), reqwest::Error> {
 }
 
 pub async fn send_notification(ticket: &Ticket) -> Result<(), reqwest::Error> {
+    let base_url: String = std::env::var("BASE_URL").expect("BASE_URL must be set");
     let mut body: String = include_str!("../../notification_template.html").to_owned();
     body = body
         .replace("{{name}}", &ticket.name)
@@ -97,7 +100,7 @@ pub async fn send_notification(ticket: &Ticket) -> Result<(), reqwest::Error> {
         .replace("{{status}}", &ticket.status)
         .replace(
             "{{link}}",
-            format!("https://ticket.matheo-galuba.com/?ticket={}", ticket.uuid).as_str(),
+            format!("{}/?ticket={}", base_url, ticket.uuid).as_str(),
         );
     send_email(
         &User {
@@ -105,6 +108,48 @@ pub async fn send_notification(ticket: &Ticket) -> Result<(), reqwest::Error> {
             email: ticket.email.clone(),
         },
         "Your ticket has been updated",
+        body.as_ref(),
+    )
+    .await
+}
+
+pub async fn send_admin_notification(
+    ticket: &Ticket,
+    stats: &dto::TicketStatsResponse,
+) -> Result<(), reqwest::Error> {
+    let mut body: String = include_str!("../../admin_notification_template.html").to_owned();
+    let base_url: String = std::env::var("BASE_URL").expect("BASE_URL must be set");
+    let admin_email: String = std::env::var("ADMIN_EMAIL").expect("ADMIN_EMAIL must be set");
+
+    body = body
+        .replace("{{name}}", &ticket.name)
+        .replace("{{email}}", &ticket.email)
+        .replace("{{number}}", &ticket.number.to_string())
+        .replace("{{subject}}", &ticket.message)
+        .replace("{{status}}", &ticket.status)
+        .replace("{{open}}", &stats.open.to_string())
+        .replace("{{pending}}", &stats.pending.to_string())
+        .replace("{{closed}}", &stats.closed.to_string())
+        .replace("{{total}}", &stats.total.to_string())
+        .replace(
+            "{{last_at}}",
+            stats
+                .last_at
+                .map(|dt| dt.to_rfc3339())
+                .unwrap_or_else(|| "N/A".to_string())
+                .as_str(),
+        )
+        .replace(
+            "{{link}}",
+            format!("{}/?ticket={}", base_url, ticket.uuid).as_str(),
+        );
+
+    send_email(
+        &User {
+            name: "Admin".to_string(),
+            email: admin_email,
+        },
+        "New ticket created",
         body.as_ref(),
     )
     .await
