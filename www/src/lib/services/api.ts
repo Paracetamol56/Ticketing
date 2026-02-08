@@ -73,6 +73,36 @@ async function updateTicket(
   }
 }
 
+async function deleteTicket(token: string, uuid: string): Promise<boolean> {
+  try {
+    await axios.delete(`${API_URL}/tickets/${uuid}`, {
+      headers: {
+        Authorization: token
+      }
+    });
+    return true;
+  }
+  catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
+async function purgeTickets(token: string): Promise<boolean> {
+  try {
+    await axios.delete(`${API_URL}/tickets`, {
+      headers: {
+        Authorization: token
+      }
+    });
+    return true;
+  }
+  catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
 async function issueTicket(
   name: string,
   email: string,
@@ -92,4 +122,4 @@ async function issueTicket(
   }
 }
 
-export { checkStatus, getTicket, getTicketPage, updateTicket, issueTicket };
+export { checkStatus, getTicket, getTicketPage, updateTicket, purgeTickets, issueTicket };

@@ -62,7 +62,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/api")
                     .configure(status::routes::configure)
-                    .configure(tickets::routes::configure),
+                    .service(web::scope("/tickets").configure(tickets::routes::configure)),
             )
             .service(
                 Files::new("/", &static_dir)

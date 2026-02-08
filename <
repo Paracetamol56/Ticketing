@@ -8,16 +8,16 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
             .route(web::get().to(handlers::get_stats)),
     );
     cfg.service(
+        web::resource("/purge")
+            .wrap(crate::middlewares::auth::AdminAuth)
+            .route(web::post().to(handlers::purge_tickets)),
+    );
+    cfg.service(
         web::resource("")
             .route(web::post().to(handlers::post_ticket))
             .route(
                 web::get()
                     .to(handlers::get_all)
-                    .wrap(crate::middlewares::auth::AdminAuth),
-            )
-            .route(
-                web::delete()
-                    .to(handlers::purge_tickets)
                     .wrap(crate::middlewares::auth::AdminAuth),
             ),
     );

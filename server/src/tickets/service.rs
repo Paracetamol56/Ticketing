@@ -100,3 +100,8 @@ pub fn delete_ticket(conn: &Connection, id: Uuid) -> Result<(), ServiceError> {
     repository::delete(conn, &id)?;
     Ok(())
 }
+
+pub fn purge_tickets(conn: &Connection) -> Result<(), ServiceError> {
+    repository::delete_all(conn)?;
+    Ok(())
+}

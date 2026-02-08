@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import '../../app.css';
 	import type TicketModel from '$lib/models/ticket';
-	import { getTicketPage } from '$lib/services/api';
+	import { getTicketPage, purgeTickets } from '$lib/services/api';
 	import TokenForm from './TokenForm.svelte';
 	import TicketRow from './TicketRow.svelte';
 	import { addToast } from '../+layout.svelte';
@@ -11,10 +11,12 @@
 	let tickets: TicketModel[] = [];
 	let page: number = 1;
 	let count: number = 1;
+
 	const handlePageChange = (newPage: number) => {
 		page = newPage;
 		fetchTickets(window.sessionStorage.getItem('token')!);
 	};
+
 	const revokeToken = () => {
 		window.sessionStorage.removeItem('token');
 		addToast({
@@ -25,6 +27,45 @@
 			}
 		});
 	};
+
+	const purgeAllTickets = async () => {
+		if (!confirm('Are you sure you want to purge all tickets? This action cannot be undone.')) {
+			return;
+		}
+
+		let token = window.sessionStorage.getItem('token');
+		if (!token) {
+			addToast({
+				data: {
+					title: 'Error',
+					description: 'No token found',
+					color: 'bg-red-500'
+				}
+			});
+			return;
+		}
+
+		const result = await purgeTickets(token);
+		if (!result) {
+			addToast({
+				data: {
+					title: 'Error',
+					description: 'An error occurred while purging tickets',
+					color: 'bg-red-500'
+				}
+			});
+			return;
+		}
+		addToast({
+			data: {
+				title: 'Success',
+				description: 'All tickets purged',
+				color: 'bg-green-500'
+			}
+		});
+		fetchTickets(token);
+	};
+
 	const fetchTickets = async (token: string) => {
 		const result = await getTicketPage(token, page);
 		if (!result) {
@@ -57,6 +98,9 @@
 			<div class="flex gap-4">
 				<a class="underline text-orange-500" href="/">Back to app</a>
 				<button class="underline text-orange-500" on:click={revokeToken}>Forget token</button>
+				<button class="underline text-red-500" on:click={purgeAllTickets}>
+					Purge all tickets
+				</button>
 			</div>
 		</div>
 	</header>

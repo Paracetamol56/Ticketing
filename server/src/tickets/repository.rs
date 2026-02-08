@@ -143,3 +143,9 @@ pub fn delete(conn: &Connection, id: &Uuid) -> Result<(), rusqlite::Error> {
     stmt.execute([id.to_string()])?;
     Ok(())
 }
+
+pub fn delete_all(conn: &Connection) -> Result<(), rusqlite::Error> {
+    let mut stmt = conn.prepare("DELETE FROM tickets;")?;
+    stmt.execute([])?;
+    Ok(())
+}

@@ -1,11 +1,11 @@
-use std::future::{ready, Ready};
 use actix_web::{
-    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
     body::EitherBody,
+    dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
     Error,
 };
 use futures_util::future::LocalBoxFuture;
-use futures_util::{TryFutureExt, FutureExt};
+use futures_util::{FutureExt, TryFutureExt};
+use std::future::{ready, Ready};
 
 // There are two steps in middleware processing.
 // 1. Middleware initialization, middleware factory gets called with
@@ -29,8 +29,12 @@ where
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        let admin_token = std::env::var("ADMIN_TOKEN").unwrap_or_else(|_| "default_admin_token".to_string());
-        ready(Ok(AdminAuthMiddleware { service, admin_token }))
+        let admin_token =
+            std::env::var("ADMIN_TOKEN").unwrap_or_else(|_| "default_admin_token".to_string());
+        ready(Ok(AdminAuthMiddleware {
+            service,
+            admin_token,
+        }))
     }
 }
 
@@ -57,7 +61,7 @@ where
             .headers()
             .get("Authorization")
             .and_then(|h| h.to_str().ok());
-        
+
         // If the auth_token is different from the admin token,
         if Some(self.admin_token.as_str()) != auth_header {
             // Return a 403 Forbidden response
@@ -71,4 +75,3 @@ where
             .boxed_local()
     }
 }
-

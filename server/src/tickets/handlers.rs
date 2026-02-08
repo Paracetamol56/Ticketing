@@ -83,3 +83,12 @@ pub async fn delete_ticket(db: web::Data<Pool>, path: web::Path<Uuid>) -> impl R
         Err(e) => e.error_response(),
     }
 }
+
+pub async fn purge_tickets(db: web::Data<Pool>) -> impl Responder {
+    let conn: Connection = db.get().expect("Failed to get DB connection");
+
+    match service::purge_tickets(&conn) {
+        Ok(()) => HttpResponse::NoContent().finish(),
+        Err(e) => e.error_response(),
+    }
+}
