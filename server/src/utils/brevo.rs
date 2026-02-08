@@ -70,7 +70,7 @@ pub async fn send_email(recipient: &User, subject: &str, body: &str) -> Result<(
 
 pub async fn send_ticket(ticket: &Ticket) -> Result<(), reqwest::Error> {
     let base_url: String = std::env::var("BASE_URL").expect("BASE_URL must be set");
-    let mut body: String = include_str!("../../ticket_template.html").to_owned();
+    let mut body: String = include_str!("../../templates/ticket_template.html").to_owned();
     body = body
         .replace("{{name}}", &ticket.name)
         .replace("{{email}}", &ticket.email)
@@ -92,7 +92,7 @@ pub async fn send_ticket(ticket: &Ticket) -> Result<(), reqwest::Error> {
 
 pub async fn send_notification(ticket: &Ticket) -> Result<(), reqwest::Error> {
     let base_url: String = std::env::var("BASE_URL").expect("BASE_URL must be set");
-    let mut body: String = include_str!("../../notification_template.html").to_owned();
+    let mut body: String = include_str!("../../templates/notification_template.html").to_owned();
     body = body
         .replace("{{name}}", &ticket.name)
         .replace("{{email}}", &ticket.email)
@@ -117,7 +117,8 @@ pub async fn send_admin_notification(
     ticket: &Ticket,
     stats: &dto::TicketStatsResponse,
 ) -> Result<(), reqwest::Error> {
-    let mut body: String = include_str!("../../admin_notification_template.html").to_owned();
+    let mut body: String =
+        include_str!("../../templates/admin_notification_template.html").to_owned();
     let base_url: String = std::env::var("BASE_URL").expect("BASE_URL must be set");
     let admin_email: String = std::env::var("ADMIN_EMAIL").expect("ADMIN_EMAIL must be set");
 
